@@ -13,7 +13,7 @@
 
 <title>Portfolio 1</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,15 +295,163 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
 <pre class="r"><code>library(tidyverse) 
-library(datasauRus)</code></pre>
+library(tidyr)
+knitr::opts_chunk$set(echo = TRUE)</code></pre>
+<p>My goal in this first portfolio project is to recreate a graph from
+my first year project poster. A screenshot of the graph is below:</p>
+<p><img src="p01/data/FirstYearProjGraph.png" width="614" /></p>
+<p>The first thing we need to do is import the data, which I’ve done
+below. The data was originally wide, and I restructured it to long
+format in SPSS. Definitely not a long-term solution, but I wanted this
+project to focus on the graphics (I’ll try the restructuring in R for
+one of my future portfolio projects).</p>
+<pre class="r"><code>library(haven)
+data &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p01/data/Long_HWInitialAnalysis.sav&quot;)</code></pre>
+<p>Let’s check out what this dataset looks like:</p>
+<pre class="r"><code>head(data)</code></pre>
+<pre><code>## # A tibble: 6 × 5
+##      id rat   Dose       Time Intake
+##   &lt;dbl&gt; &lt;chr&gt; &lt;dbl+lbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1     1 HW2   1 [VEH]       1   1.48
+## 2     1 HW2   1 [VEH]       2   2.57
+## 3     1 HW2   1 [VEH]       3   2.58
+## 4     1 HW2   1 [VEH]       4   2.56
+## 5     1 HW2   1 [VEH]       5   2.58
+## 6     1 HW2   1 [VEH]       6   2.58</code></pre>
+<pre class="r"><code>names(data)</code></pre>
+<pre><code>## [1] &quot;id&quot;     &quot;rat&quot;    &quot;Dose&quot;   &quot;Time&quot;   &quot;Intake&quot;</code></pre>
+<p>This is mostly what we wanted, but I want to create a new variable so
+that the dose groups aren’t indexed just by numbers. For example, a dose
+code of 1 indicates the saline treatment, but that isn’t obvious at all
+from the table we have here. Let’s go ahead and make that change:</p>
+<pre class="r"><code>data &lt;- data %&gt;%
+  mutate(dosename = case_when(Dose == 1 ~ &#39;VEH&#39;,
+                             Dose == 2 ~ &#39;LO&#39;,
+                             Dose == 3 ~ &#39;MED&#39;,
+                             Dose == 4 ~ &#39;HI&#39;,
+                             Dose == 5 ~ &#39;DAMGO&#39;))</code></pre>
+<p>It’s also a little unclear what the time variable in the existing
+dataset means. Cumulative food intake for each animal was measured every
+five minutes, so we need to multiply the time variable by 5 so that our
+time variable actually gives us the number of minutes since the feeding
+session started:</p>
+<pre class="r"><code>data &lt;- data %&gt;%
+  mutate(realtime = Time * 5)</code></pre>
+<p>And now that we’ve finished wrangling our data we can start graphing.
+Let’s just give it a very rough first pass to see what happens when I
+plot intake over time:</p>
+<pre class="r"><code>ggplot(data = data, mapping = aes(x = realtime,
+                                  y = Intake,
+                                  color = dosename)) + 
+  geom_point() + 
+  geom_line()</code></pre>
+<p><img src="p01_files/figure-html/first-pass-1.png" width="672" /></p>
+<p>At this point I realized that the points in my original plot are
+group <em>means</em>, and the points in my current data frame are from
+individual animals. Just to follow this line of thinking, I’m going to
+graph the data from each animal separately. Each plot should have the
+same general form of the original plot (the plot I want), and that will
+at least confirm that nothing went horribly wrong in my data
+processing:</p>
+<pre class="r"><code>ggplot(data = data, mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~ rat, ncol = 2)</code></pre>
+<p><img src="p01_files/figure-html/confirmation-1.png" width="672" /></p>
+<p>This is good! The data is set up the way I expected. Each point does
+give cumulative intake (since none of the lines go down), and the DAMGO
+line for each animal ends up being the highest (since DAMGO was our
+positive control). This confirms that the next step is to average across
+animal groups, and calculate standard deviations for the error bars.</p>
+<p>Let’s give that a shot here. I went ahead and restructured the data
+outside of R (again, to focus on visualization here), so I’ll import the
+new dataset below and filter it so that we only have the rows we
+want:</p>
+<pre class="r"><code>means_sds &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p01/data/Descriptives_HWData.sav&quot;)
+means_sds &lt;- means_sds %&gt;%
+  filter(rat == &quot;Average&quot; | rat == &quot;StDev&quot;)</code></pre>
+<p>Next we’ll take it through the same processing pipeline we did with
+our first dataset to create meaningful dose and time variables</p>
+<pre class="r"><code>means_sds &lt;- means_sds %&gt;%
+  mutate(dosename = case_when(Dose == 1 ~ &#39;VEH&#39;,
+                             Dose == 2 ~ &#39;LO&#39;,
+                             Dose == 3 ~ &#39;MED&#39;,
+                             Dose == 4 ~ &#39;HI&#39;,
+                             Dose == 5 ~ &#39;DAMGO&#39;))
+means_sds &lt;- means_sds %&gt;%
+  mutate(realtime = Time * 5)</code></pre>
+<p>And now we should be ready to try to plot it again:</p>
+<pre class="r"><code>means_sds %&gt;%
+  filter(rat == &quot;Average&quot;) %&gt;%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line()</code></pre>
+<p><img src="p01_files/figure-html/graph-second-pass-1.png" width="672" /></p>
+<p>Perfect! Still needs a few touches, but this is exactly what we were
+hoping for. Next thing to do to recreate the original plot is to filter
+out some of these groups. We ended up not displaying the DAMGO and LO
+groups on the poster, the former because we really only did it as a
+manipulation check and the latter because it was very similar to the MED
+group but made the graph difficult to parse visually. These are filtered
+out below</p>
+<pre class="r"><code>means_sds %&gt;%
+  filter(rat == &quot;Average&quot;,
+         dosename == &quot;VEH&quot; | dosename == &quot;MED&quot; | dosename == &quot;HI&quot;) %&gt;%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line()</code></pre>
+<p><img src="p01_files/figure-html/graph-with-groups-filtered-1.png" width="672" /></p>
+<p>Next let’s turn to the error bars. I realized at this point the data
+as I have it isn’t really set up for me to add error bars, but since
+this project is consistently requiring data restructuring I figure I may
+as well try to do this bout of it in R. Let’s try it below:</p>
+<pre class="r"><code>#Puts the data we&#39;ve been working with in wide format
+data_wider &lt;- means_sds %&gt;%
+  pivot_wider(names_from = rat,
+              values_from = Intake)
+#Creates a subset of the data by extracting the dose, time, and mean
+data_means &lt;- data_wider[,c(&#39;dosename&#39;, &#39;realtime&#39;, &#39;Average&#39;)]
+data_means &lt;- data_means %&gt;%
+  slice_head(n=120)
+#Creates a subset of the data by extracting the dose, time, and standard deviation
+data_sds &lt;- data_wider[,c(&#39;dosename&#39;, &#39;realtime&#39;, &#39;StDev&#39;)]
+data_sds &lt;- data_sds %&gt;%
+  slice_tail(n=120)
+#Merges the two subsets we just created
+data_proper &lt;- merge(data_means,data_sds)</code></pre>
+<p>Now that we’ve essentially created our own dataset from scratch,
+we’re ready to try graphing it.</p>
+<pre class="r"><code>data_proper %&gt;%
+  filter(dosename == &quot;VEH&quot; | dosename == &quot;MED&quot; | dosename == &quot;HI&quot;) %&gt;%
+ggplot(mapping = aes(x = realtime,
+                     y = Average,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin = Average - (StDev/sqrt(7)), ymax = Average + StDev/sqrt(7)))</code></pre>
+<p><img src="p01_files/figure-html/graph-with-error-bars-1.png" width="672" /></p>
+<pre class="r"><code>#I realized the error bars actually were standard errors, so I divided StDev by sqrt(7) to convert</code></pre>
+<p>And here we have our finished plot!</p>
+<p>I want to point out that this plot is good, but it isn’t
+<em>great</em>. An alternative way to represent it that jumps out at me
+is to use a smooth:</p>
+<pre class="r"><code>data %&gt;%
+  filter(dosename == &quot;VEH&quot; | dosename == &quot;MED&quot; | dosename == &quot;HI&quot;) %&gt;%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_smooth()</code></pre>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="p01_files/figure-html/smooth-alternative-1.png" width="672" />
+A little messy, but there’s potential I think!</p>
 
 
 

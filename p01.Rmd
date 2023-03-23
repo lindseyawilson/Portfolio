@@ -2,48 +2,184 @@
 title: "Portfolio 1"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
-
 ```{r load-packages, message=FALSE}
 library(tidyverse) 
 library(tidyr)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum eget nibh vel est aliquet iaculis at placerat sem. Aenean faucibus iaculis ultricies. Nullam consequat odio in ultricies ullamcorper. Etiam venenatis in est vitae ullamcorper. Nam vitae urna ut dolor rhoncus aliquet at vel neque. Quisque tristique leo finibus nisi interdum, sit amet tempor risus viverra. Donec mollis vulputate sodales. Nunc ornare, leo quis euismod eleifend, eros mi maximus felis, vel varius lacus dui eget nibh. Duis vitae nunc nisl. Donec accumsan aliquam elit, eu fringilla quam pulvinar eget.
-
-Mauris in ligula mauris. Curabitur facilisis pharetra metus eget lobortis. In egestas nibh sit amet faucibus eleifend. Suspendisse imperdiet viverra blandit. Phasellus consectetur tincidunt eros eu facilisis. Quisque maximus, orci eget sodales aliquam, velit lorem semper dolor, nec convallis erat ipsum mattis velit. Pellentesque porttitor, mauris vitae aliquam mattis, metus nisl viverra turpis, vel convallis metus sapien et ex. Nunc consequat ipsum id dolor eleifend, sit amet semper eros sodales. Pellentesque consectetur, dui quis venenatis malesuada, nunc lorem lacinia libero, vitae malesuada dui arcu in augue. Aliquam id sagittis libero. Vestibulum aliquet sagittis libero, non posuere odio molestie ut. Curabitur lacus enim, viverra vel odio non, pretium efficitur elit. Mauris posuere efficitur interdum. Nunc sed bibendum turpis, quis fringilla velit. Phasellus eu lorem lobortis eros molestie laoreet.
-
+My goal in this first portfolio project is to recreate a graph from my first year project poster.
+A screenshot of the graph is below:
 
 
-```{r}
-# Create a barplot of the number of fish encounters by species
-ggplot(data = fish_encounters, aes(x = species, y = count)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Species", y = "Number of Fish Encounters")
-  
+```{r original-image, echo=FALSE, eval=TRUE}
+knitr::include_graphics("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p01/data/FirstYearProjGraph.png")
 ```
 
+The first thing we need to do is import the data, which I've done below.
+The data was originally wide, and I restructured it to long format in SPSS.
+Definitely not a long-term solution, but I wanted this project to focus on the graphics (I'll try the restructuring in R for one of my future portfolio projects).
 
-Sed mollis purus faucibus leo finibus, ut pharetra nibh elementum. Nulla id orci lorem. Mauris sollicitudin mi eget tellus vehicula, ut convallis lorem mollis. In blandit nulla diam, a malesuada sem volutpat interdum. Ut elementum elit at velit maximus, ac tempor odio porttitor. Suspendisse lobortis sollicitudin tortor, ut pharetra libero luctus a. Sed hendrerit faucibus metus. Sed rutrum purus vel pellentesque euismod.
-
-
-```{r}
-# Create a barplot of the number of fish encounters by species
-ggplot(data = fish_encounters, aes(x = species, y = count)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Species", y = "Number of Fish Encounters")
-  
+```{r import-data}
+library(haven)
+data <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p01/data/Long_HWInitialAnalysis.sav")
 ```
 
-Mauris placerat in velit a pharetra. Nulla viverra bibendum lectus, ut lobortis nibh. Aenean malesuada, orci vitae dictum placerat, enim justo aliquet leo, ac tincidunt augue ipsum et mi. Nullam in pharetra metus, nec molestie felis. Duis varius rhoncus pulvinar. Integer semper urna sed tellus rhoncus, vel suscipit odio iaculis. Mauris iaculis neque pellentesque ex convallis venenatis. Sed ultrices euismod fermentum. Ut feugiat risus at turpis tincidunt viverra.
+Let's check out what this dataset looks like:
 
-
-```{r}
-# Create a barplot of the number of fish encounters by species
-ggplot(data = fish_encounters, aes(x = species, y = count)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Species", y = "Number of Fish Encounters")
-  
+```{r inspect}
+head(data)
+names(data)
 ```
 
-Donec sagittis suscipit orci in ultrices. Vivamus iaculis eleifend est et dictum. Fusce non urna at lacus dapibus tincidunt ac sed nibh. Donec luctus lectus elit, ac ultrices tortor mollis sit amet. Nulla finibus lacinia arcu. Proin sollicitudin non odio et pulvinar. Maecenas finibus faucibus finibus. Ut elementum metus velit, a sodales sapien commodo et. Vivamus pulvinar, sapien et porta cursus, elit est luctus nisi, eget fringilla odio diam et enim. Sed sodales suscipit bibendum. Morbi ut metus semper, laoreet felis sodales, consequat dolor.
+This is mostly what we wanted, but I want to create a new variable so that the dose groups aren't indexed just by numbers.
+For example, a dose code of 1 indicates the saline treatment, but that isn't obvious at all from the table we have here.
+Let's go ahead and make that change:
+
+```{r create-dose-name-variable}
+data <- data %>%
+  mutate(dosename = case_when(Dose == 1 ~ 'VEH',
+                             Dose == 2 ~ 'LO',
+                             Dose == 3 ~ 'MED',
+                             Dose == 4 ~ 'HI',
+                             Dose == 5 ~ 'DAMGO'))
+```
+
+It's also a little unclear what the time variable in the existing dataset means.
+Cumulative food intake for each animal was measured every five minutes, so we need to multiply the time variable by 5 so that our time variable actually gives us the number of minutes since the feeding session started:
+
+```{r create-time-variable}
+data <- data %>%
+  mutate(realtime = Time * 5)
+```
+
+And now that we've finished wrangling our data we can start graphing.
+Let's just give it a very rough first pass to see what happens when I plot intake over time:
+
+```{r first-pass}
+ggplot(data = data, mapping = aes(x = realtime,
+                                  y = Intake,
+                                  color = dosename)) + 
+  geom_point() + 
+  geom_line()
+```
+
+At this point I realized that the points in my original plot are group *means*, and the points in my current data frame are from individual animals.
+Just to follow this line of thinking, I'm going to graph the data from each animal separately.
+Each plot should have the same general form of the original plot (the plot I want), and that will at least confirm that nothing went horribly wrong in my data processing:
+
+```{r confirmation}
+ggplot(data = data, mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~ rat, ncol = 2)
+```
+
+This is good!
+The data is set up the way I expected.
+Each point does give cumulative intake (since none of the lines go down), and the DAMGO line for each animal ends up being the highest (since DAMGO was our positive control).
+This confirms that the next step is to average across animal groups, and calculate standard deviations for the error bars.
+
+Let's give that a shot here. 
+I went ahead and restructured the data outside of R (again, to focus on visualization here), so I'll import the new dataset below and filter it so that we only have the rows we want:
+
+```{r import-restructured-data}
+means_sds <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p01/data/Descriptives_HWData.sav")
+means_sds <- means_sds %>%
+  filter(rat == "Average" | rat == "StDev")
+```
+
+Next we'll take it through the same processing pipeline we did with our first dataset to create meaningful dose and time variables
+
+```{r processing-take-2}
+means_sds <- means_sds %>%
+  mutate(dosename = case_when(Dose == 1 ~ 'VEH',
+                             Dose == 2 ~ 'LO',
+                             Dose == 3 ~ 'MED',
+                             Dose == 4 ~ 'HI',
+                             Dose == 5 ~ 'DAMGO'))
+means_sds <- means_sds %>%
+  mutate(realtime = Time * 5)
+```
+
+And now we should be ready to try to plot it again:
+
+```{r graph-second-pass}
+means_sds %>%
+  filter(rat == "Average") %>%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line()
+```
+
+Perfect!
+Still needs a few touches, but this is exactly what we were hoping for.
+Next thing to do to recreate the original plot is to filter out some of these groups.
+We ended up not displaying the DAMGO and LO groups on the poster, the former because we really only did it as a manipulation check and the latter because it was very similar to the MED group but made the graph difficult to parse visually.
+These are filtered out below
+
+```{r graph-with-groups-filtered}
+means_sds %>%
+  filter(rat == "Average",
+         dosename == "VEH" | dosename == "MED" | dosename == "HI") %>%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line()
+```
+
+Next let's turn to the error bars.
+I realized at this point the data as I have it isn't really set up for me to add error bars, but since this project is consistently requiring data restructuring I figure I may as well try to do this bout of it in R.
+Let's try it below:
+
+```{r final-restructure}
+#Puts the data we've been working with in wide format
+data_wider <- means_sds %>%
+  pivot_wider(names_from = rat,
+              values_from = Intake)
+#Creates a subset of the data by extracting the dose, time, and mean
+data_means <- data_wider[,c('dosename', 'realtime', 'Average')]
+data_means <- data_means %>%
+  slice_head(n=120)
+#Creates a subset of the data by extracting the dose, time, and standard deviation
+data_sds <- data_wider[,c('dosename', 'realtime', 'StDev')]
+data_sds <- data_sds %>%
+  slice_tail(n=120)
+#Merges the two subsets we just created
+data_proper <- merge(data_means,data_sds)
+```
+
+Now that we've essentially created our own dataset from scratch, we're ready to try graphing it.
+
+```{r graph-with-error-bars}
+data_proper %>%
+  filter(dosename == "VEH" | dosename == "MED" | dosename == "HI") %>%
+ggplot(mapping = aes(x = realtime,
+                     y = Average,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_errorbar(aes(ymin = Average - (StDev/sqrt(7)), ymax = Average + StDev/sqrt(7)))
+#I realized the error bars actually were standard errors, so I divided StDev by sqrt(7) to convert
+```
+
+And here we have our finished plot!
+
+I want to point out that this plot is good, but it isn't *great*.
+An alternative way to represent it that jumps out at me is to use a smooth:
+
+```{r smooth-alternative}
+data %>%
+  filter(dosename == "VEH" | dosename == "MED" | dosename == "HI") %>%
+ggplot(mapping = aes(x = realtime,
+                     y = Intake,
+                     color = dosename)) + 
+  geom_point() + 
+  geom_smooth()
+```
+A little messy, but there's potential I think!
