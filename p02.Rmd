@@ -2,4 +2,36 @@
 title: "Portfolio 2"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+### Background
+
+We just finished collecting data for the last study of my first-year project, so I'm going to take this as an opportunity to analyze that data.  Additionally, this accomplishes two goals: 1.) I get to learn how to do ANOVAs in R, and 2.) I get more practice with data visualization, which gets me some nice figures for the paper we're writing up.
+
+Some context on the project. Essentially, we trained rats to press a button in exchange for sugar. The catch is that the sugar pellets are harder to earn as the session continues. The first time they press, they get a pellet right away. However, to get the next one they have to press 3 times, then 5, then 7...so on and so forth. The overall pattern is that in order to receive the nth pellet, the rats have to press 2n-1 additional times. As you can imagine, they eventually get tired of this game, and we measure the point at which they give up  as an index of their motivation.
+
+Specifically, we took 4 dependent measures:
+
+1.) The number of presses on the active lever, where responding earned a sugar reward
+2.) The number of presses on the inactive lever, which was right next to the active lever but never earned the rat any sugar. We measure this to make sure the rat is specifically trying to earn sugar, as opposed to just generally running around the cage and indiscriminately mashing either lever.
+3.) The total number of reinforcers (sugar pellets) the rat earned
+4.) Breakpoint -- the number of responses between the penultimate and the final sugar pellet of the session. This is DV we care about the most, and it  works out to be double the number of reinforcers earned.
+
+We then gave them a drug that, based on some results from my first year project, we thought would decrease their motivation. In the context of this experiment, that means fewer presses, a smaller breakpoint, and fewer reinforcers (sugar pellets earned). As you will see shortly, this is not what we found, but it helps to have some idea what we were going for. We gave the drug in two doses (LO and HI) along with a control dose of saline vehicle (VEH)
+
+### Setup
+
+With all that. exposition out of the way, we can go ahead and get started. First, let's load the packages and data we'll need:
+
+```{r setup}
+library(tidyverse)
+library(haven)
+
+breakpoint <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Breakpoint.sav")
+active <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_TotalLeverPresses.sav")
+reinforcers <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Reinforcers.sav")
+inactive <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_InactiveLever.sav")
+
+```
+
+As you can see, we have a separate data file for each dependent variable, and the plan is to do a one-way repeated measures ANOVA with drug dose as the independent variable for each one. One could probably make a pretty good case that we should do a multivariate ANOVA before we do anything else, but I've never seen that done in a paper like this -- and my understanding is that multivariate ANOVA has some issues of it's own.We're going to skip it here.
+
+

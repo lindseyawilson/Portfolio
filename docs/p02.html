@@ -13,7 +13,7 @@
 
 <title>Portfolio 2</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,13 +295,68 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
+<div id="background" class="section level3">
+<h3>Background</h3>
+<p>We just finished collecting data for the last study of my first-year
+project, so I’m going to take this as an opportunity to analyze that
+data. Additionally, this accomplishes two goals: 1.) I get to learn how
+to do ANOVAs in R, and 2.) I get more practice with data visualization,
+which gets me some nice figures for the paper we’re writing up.</p>
+<p>Some context on the project. Essentially, we trained rats to press a
+button in exchange for sugar. The catch is that the sugar pellets are
+harder to earn as the session continues. The first time they press, they
+get a pellet right away. However, to get the next one they have to press
+3 times, then 5, then 7…so on and so forth. The overall pattern is that
+in order to receive the nth pellet, the rats have to press 2n-1
+additional times. As you can imagine, they eventually get tired of this
+game, and we measure the point at which they give up as an index of
+their motivation.</p>
+<p>Specifically, we took 4 dependent measures:</p>
+<p>1.) The number of presses on the active lever, where responding
+earned a sugar reward 2.) The number of presses on the inactive lever,
+which was right next to the active lever but never earned the rat any
+sugar. We measure this to make sure the rat is specifically trying to
+earn sugar, as opposed to just generally running around the cage and
+indiscriminately mashing either lever. 3.) The total number of
+reinforcers (sugar pellets) the rat earned 4.) Breakpoint – the number
+of responses between the penultimate and the final sugar pellet of the
+session. This is DV we care about the most, and it works out to be
+double the number of reinforcers earned.</p>
+<p>We then gave them a drug that, based on some results from my first
+year project, we thought would decrease their motivation. In the context
+of this experiment, that means fewer presses, a smaller breakpoint, and
+fewer reinforcers (sugar pellets earned). As you will see shortly, this
+is not what we found, but it helps to have some idea what we were going
+for. We gave the drug in two doses (LO and HI) along with a control dose
+of saline vehicle (VEH)</p>
+</div>
+<div id="setup" class="section level3">
+<h3>Setup</h3>
+<p>With all that. exposition out of the way, we can go ahead and get
+started. First, let’s load the packages and data we’ll need:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
+## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(haven)
+
+breakpoint &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Breakpoint.sav&quot;)
+active &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_TotalLeverPresses.sav&quot;)
+reinforcers &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Reinforcers.sav&quot;)
+inactive &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_InactiveLever.sav&quot;)</code></pre>
+<p>As you can see, we have a separate data file for each dependent
+variable, and the plan is to do a one-way repeated measures ANOVA with
+drug dose as the independent variable for each one. One could probably
+make a pretty good case that we should do a multivariate ANOVA before we
+do anything else, but I’ve never seen that done in a paper like this –
+and my understanding is that multivariate ANOVA has some issues of it’s
+own.We’re going to skip it here.</p>
+</div>
 
 
 
