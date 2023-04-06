@@ -332,18 +332,26 @@ of saline vehicle (VEH)</p>
 </div>
 <div id="setup" class="section level3">
 <h3>Setup</h3>
-<p>With all that. exposition out of the way, we can go ahead and get
+<p>With all that exposition out of the way, we can go ahead and get
 started. First, let’s load the packages and data we’ll need:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
 ## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
 ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-## ✔ tidyr   1.2.1      ✔ stringr 1.5.0 
+## ✔ tidyr   1.3.0      ✔ stringr 1.5.0 
 ## ✔ readr   2.1.3      ✔ forcats 0.5.2 
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(haven)
+library(rstatix)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rstatix&#39;
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre class="r"><code>library(ggpubr)
 
 breakpoint &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Breakpoint.sav&quot;)
 active &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_TotalLeverPresses.sav&quot;)
@@ -355,7 +363,84 @@ drug dose as the independent variable for each one. One could probably
 make a pretty good case that we should do a multivariate ANOVA before we
 do anything else, but I’ve never seen that done in a paper like this –
 and my understanding is that multivariate ANOVA has some issues of it’s
-own.We’re going to skip it here.</p>
+own. We’re going to skip it here.</p>
+<p>If we want to do an ANOVA though, first we’ll need an ANOVA package.
+One I was able to find is called <code>rstatix</code>.</p>
+<p>The package requires data to be in long form, but the data as we
+currently have it is wide. We can reformat it below:</p>
+<pre class="r"><code>active_long &lt;- active %&gt;%
+   pivot_longer(cols = -Rat,
+               names_to = &quot;dose&quot;)
+
+inactive_long &lt;- inactive %&gt;%
+   pivot_longer(cols = -Rat,
+               names_to = &quot;dose&quot;)
+
+reinforcers_long &lt;- reinforcers %&gt;%
+  pivot_longer(cols = -Rat,
+               names_to = &quot;dose&quot;)
+
+breakpoint_long &lt;- breakpoint %&gt;%
+  pivot_longer(cols = -Rat,
+               names_to = &quot;dose&quot;)</code></pre>
+<p>And now that we have the data set up the way we want it, we can start
+running our ANOVAs themselves</p>
+<pre class="r"><code>active_results &lt;- anova_test(data = active_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+inactive_results &lt;- anova_test(data = inactive_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+reinforcers_results &lt;- anova_test(data = reinforcers_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+breakpoint_results &lt;- anova_test(data = breakpoint_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)</code></pre>
+<p>And just like that, we have our calculations out of the way! Let’s
+take a look at how things turned out, starting with active lever
+presses:</p>
+<pre class="r"><code>get_anova_table(active_results)</code></pre>
+<pre><code>## ANOVA Table (type III tests)
+## 
+##   Effect DFn DFd     F     p p&lt;.05   ges
+## 1   dose   2  16 0.655 0.533       0.021</code></pre>
+<p>So overall it looks like there wasn’t a significant effect of drug
+dose on active lever presses. Adding a visualization might help us to
+get a better idea of what’s going on:</p>
+<pre class="r"><code>active_long %&gt;%
+  ggbarplot(x = &quot;dose&quot;,
+            y = &quot;value&quot;,
+            add = c(&quot;mean_se&quot;),
+            fill = &quot;darkgrey&quot;,
+            ylab = &quot;Active Lever Presses&quot;)</code></pre>
+<p><img src="p02_files/figure-html/active-viz-1.png" width="672" /></p>
+<p>As we can see, there’s some pretty significant overlap in the error
+bars, which here represent standard errors.</p>
+<p>Since breakpoint and number of reinforcers are both based on the
+number of active lever presses, we see a similar pattern of results for
+those two dependent variables as well:</p>
+<pre class="r"><code>reinforcers_long %&gt;%
+  ggbarplot(x = &quot;dose&quot;,
+            y = &quot;value&quot;,
+            add = c(&quot;mean_se&quot;),
+            fill = &quot;darkgrey&quot;,
+            ylab = &quot;Reinforcers&quot;)</code></pre>
+<p><img src="p02_files/figure-html/breakpoint-reinforcer-viz-1.png" width="672" /></p>
+<pre class="r"><code>breakpoint_long %&gt;%
+  ggbarplot(x = &quot;dose&quot;,
+            y = &quot;value&quot;,
+            add = c(&quot;mean_se&quot;),
+            fill = &quot;darkgrey&quot;,
+            ylab = &quot;Breakpoint&quot;)</code></pre>
+<p><img src="p02_files/figure-html/breakpoint-reinforcer-viz-2.png" width="672" /></p>
 </div>
 
 

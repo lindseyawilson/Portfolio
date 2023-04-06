@@ -19,11 +19,13 @@ We then gave them a drug that, based on some results from my first year project,
 
 ### Setup
 
-With all that. exposition out of the way, we can go ahead and get started. First, let's load the packages and data we'll need:
+With all that exposition out of the way, we can go ahead and get started. First, let's load the packages and data we'll need:
 
 ```{r setup}
 library(tidyverse)
 library(haven)
+library(rstatix)
+library(ggpubr)
 
 breakpoint <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_Breakpoint.sav")
 active <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p02/HZ_TotalLeverPresses.sav")
@@ -32,6 +34,90 @@ inactive <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portf
 
 ```
 
-As you can see, we have a separate data file for each dependent variable, and the plan is to do a one-way repeated measures ANOVA with drug dose as the independent variable for each one. One could probably make a pretty good case that we should do a multivariate ANOVA before we do anything else, but I've never seen that done in a paper like this -- and my understanding is that multivariate ANOVA has some issues of it's own.We're going to skip it here.
+As you can see, we have a separate data file for each dependent variable, and the plan is to do a one-way repeated measures ANOVA with drug dose as the independent variable for each one. One could probably make a pretty good case that we should do a multivariate ANOVA before we do anything else, but I've never seen that done in a paper like this -- and my understanding is that multivariate ANOVA has some issues of it's own. We're going to skip it here.
 
+If we want to do an ANOVA though, first we'll need an ANOVA package. One I was able to find is called `rstatix`. 
+
+The package requires data to be in long form, but the data as we currently have it is wide. We can reformat it below:
+
+```{r reformatting}
+active_long <- active %>%
+   pivot_longer(cols = -Rat,
+               names_to = "dose")
+
+inactive_long <- inactive %>%
+   pivot_longer(cols = -Rat,
+               names_to = "dose")
+
+reinforcers_long <- reinforcers %>%
+  pivot_longer(cols = -Rat,
+               names_to = "dose")
+
+breakpoint_long <- breakpoint %>%
+  pivot_longer(cols = -Rat,
+               names_to = "dose")
+```
+
+And now that we have the data set up the way we want it, we can start running our ANOVAs themselves
+
+```{r anova-calculations}
+active_results <- anova_test(data = active_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+inactive_results <- anova_test(data = inactive_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+reinforcers_results <- anova_test(data = reinforcers_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+
+breakpoint_results <- anova_test(data = breakpoint_long,
+                             dv = value,
+                             wid = Rat,
+                             within = dose)
+```
+
+And just like that, we have our calculations out of the way! Let's take a look at how things turned out, starting with active lever presses:
+
+```{r active-results}
+get_anova_table(active_results)
+```
+
+So overall it looks like there wasn't a significant effect of drug dose on active lever presses. Adding a visualization might help us to get a better idea of what's going on:
+
+```{r active-viz}
+active_long %>%
+  ggbarplot(x = "dose",
+            y = "value",
+            add = c("mean_se"),
+            fill = "darkgrey",
+            ylab = "Active Lever Presses")
+```
+
+As we can see, there's some pretty significant overlap in the error bars, which here represent standard errors.
+
+Since breakpoint and number of reinforcers are both based on the number of active lever presses, we see a similar pattern of results for those two dependent variables as well:
+
+```{r breakpoint-reinforcer-viz}
+reinforcers_long %>%
+  ggbarplot(x = "dose",
+            y = "value",
+            add = c("mean_se"),
+            fill = "darkgrey",
+            ylab = "Reinforcers")
+
+
+breakpoint_long %>%
+  ggbarplot(x = "dose",
+            y = "value",
+            add = c("mean_se"),
+            fill = "darkgrey",
+            ylab = "Breakpoint")
+
+```
 
