@@ -313,22 +313,25 @@ game, and we measure the point at which they give up as an index of
 their motivation.</p>
 <p>Specifically, we took 4 dependent measures:</p>
 <p>1.) The number of presses on the active lever, where responding
-earned a sugar reward 2.) The number of presses on the inactive lever,
-which was right next to the active lever but never earned the rat any
-sugar. We measure this to make sure the rat is specifically trying to
-earn sugar, as opposed to just generally running around the cage and
-indiscriminately mashing either lever. 3.) The total number of
-reinforcers (sugar pellets) the rat earned 4.) Breakpoint – the number
-of responses between the penultimate and the final sugar pellet of the
-session. This is DV we care about the most, and it works out to be
-double the number of reinforcers earned.</p>
-<p>We then gave them a drug that, based on some results from my first
-year project, we thought would decrease their motivation. In the context
-of this experiment, that means fewer presses, a smaller breakpoint, and
-fewer reinforcers (sugar pellets earned). As you will see shortly, this
-is not what we found, but it helps to have some idea what we were going
-for. We gave the drug in two doses (LO and HI) along with a control dose
-of saline vehicle (VEH)</p>
+earned a sugar reward</p>
+<p>2.) The number of presses on the inactive lever, which was right next
+to the active lever but never earned the rat any sugar. We measure this
+to make sure the rat is specifically trying to earn sugar, as opposed to
+just generally running around the cage and indiscriminately mashing
+either lever.</p>
+<p>3.) The total number of reinforcers (sugar pellets) the rat
+earned</p>
+<p>4.) Breakpoint – the number of responses between the penultimate and
+the final sugar pellet of the session. This is DV we care about the
+most, and it works out to be double the number of reinforcers
+earned.</p>
+<p>We then gave them a drug called nociceptin that, based on some
+results from my first year project, we thought would decrease their
+motivation. In the context of this experiment, that means fewer presses,
+a smaller breakpoint, and fewer reinforcers (sugar pellets earned). As
+you will see shortly, this is not what we found, but it helps to have
+some idea what we were going for. We gave the drug in two doses (MED and
+HI) along with a control dose of saline vehicle (LO)</p>
 </div>
 <div id="setup" class="section level3">
 <h3>Setup</h3>
@@ -441,6 +444,54 @@ those two dependent variables as well:</p>
             fill = &quot;darkgrey&quot;,
             ylab = &quot;Breakpoint&quot;)</code></pre>
 <p><img src="p02_files/figure-html/breakpoint-reinforcer-viz-2.png" width="672" /></p>
+<p>And these results aren’t significant either:</p>
+<pre class="r"><code>get_anova_table(reinforcers_results)</code></pre>
+<pre><code>## ANOVA Table (type III tests)
+## 
+##   Effect DFn DFd     F     p p&lt;.05   ges
+## 1   dose   2  16 0.664 0.528       0.023</code></pre>
+<pre class="r"><code>get_anova_table(breakpoint_results)</code></pre>
+<pre><code>## ANOVA Table (type III tests)
+## 
+##   Effect DFn DFd     F     p p&lt;.05   ges
+## 1   dose   2  16 0.664 0.528       0.023</code></pre>
+<p>This just leaves inactive lever presses left to analyze.
+Surprisingly, we actually do have a significant effect of nociceptin
+dose on inactive lever pressing. Results of that test are shown below,
+along :</p>
+<pre class="r"><code>get_anova_table(inactive_results)</code></pre>
+<pre><code>## ANOVA Table (type III tests)
+## 
+##   Effect DFn DFd     F    p p&lt;.05   ges
+## 1   dose   2  16 3.975 0.04     * 0.157</code></pre>
+<pre class="r"><code>inactive_long %&gt;%
+  tukey_hsd(value ~ dose)</code></pre>
+<pre><code>## # A tibble: 3 × 9
+##   term  group1 group2 null.value estimate conf.low conf.high p.adj p.adj.signif
+## * &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;       &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;       
+## 1 dose  Hi     Lo              0    -4.78   -10.5      0.911 0.112 ns          
+## 2 dose  Hi     Med             0    -1.89    -7.58     3.80  0.689 ns          
+## 3 dose  Lo     Med             0     2.89    -2.80     8.58  0.426 ns</code></pre>
+<p>This is an odd pattern of data. We have a significant ANOVA, but our
+Tukey’s post-hoc tests don’t reveal any significant differences (likely
+because the package I’m using isn’t able to correct the pairwise
+comparisons for a repeated measures analysis). Let’s see if graphing the
+data clears things up:</p>
+<pre class="r"><code>inactive_long %&gt;%
+  ggbarplot(x = &quot;dose&quot;,
+            y = &quot;value&quot;,
+            add = c(&quot;mean_se&quot;),
+            fill = &quot;darkgrey&quot;,
+            ylab = &quot;Inactive Lever Presses&quot;)</code></pre>
+<p><img src="p02_files/figure-html/inactive-viz-1.png" width="672" /></p>
+<p>Based on this, if I had to guess I’d probably say the comparison
+between the LO and HI groups is what the ANOVA picked up on. In any case
+this is definitely our least important result – interesting to see, but
+that’s basically all.</p>
+<p>So in sum, nociceptin seems not to have an impact on active lever
+pressing, but it does have an effect on inactive pressing. This suggests
+that it doesn’t necessarily increase motivation, but it may have a
+generally stimulatory effect on locomotor behavior.</p>
 </div>
 
 

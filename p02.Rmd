@@ -11,11 +11,14 @@ Some context on the project. Essentially, we trained rats to press a button in e
 Specifically, we took 4 dependent measures:
 
 1.) The number of presses on the active lever, where responding earned a sugar reward
+
 2.) The number of presses on the inactive lever, which was right next to the active lever but never earned the rat any sugar. We measure this to make sure the rat is specifically trying to earn sugar, as opposed to just generally running around the cage and indiscriminately mashing either lever.
+
 3.) The total number of reinforcers (sugar pellets) the rat earned
+
 4.) Breakpoint -- the number of responses between the penultimate and the final sugar pellet of the session. This is DV we care about the most, and it  works out to be double the number of reinforcers earned.
 
-We then gave them a drug that, based on some results from my first year project, we thought would decrease their motivation. In the context of this experiment, that means fewer presses, a smaller breakpoint, and fewer reinforcers (sugar pellets earned). As you will see shortly, this is not what we found, but it helps to have some idea what we were going for. We gave the drug in two doses (LO and HI) along with a control dose of saline vehicle (VEH)
+We then gave them a drug called nociceptin that, based on some results from my first year project, we thought would decrease their motivation. In the context of this experiment, that means fewer presses, a smaller breakpoint, and fewer reinforcers (sugar pellets earned). As you will see shortly, this is not what we found, but it helps to have some idea what we were going for. We gave the drug in two doses (MED and HI) along with a control dose of saline vehicle (LO)
 
 ### Setup
 
@@ -121,3 +124,32 @@ breakpoint_long %>%
 
 ```
 
+And these results aren't significant either:
+
+```{r reinforcers-breakpoint-results}
+get_anova_table(reinforcers_results)
+get_anova_table(breakpoint_results)
+```
+
+This just leaves inactive lever presses left to analyze. Surprisingly, we actually do have a significant effect of nociceptin dose on inactive lever pressing. Results of that test are shown below, along :
+
+```{r inactive-results}
+get_anova_table(inactive_results)
+inactive_long %>%
+  tukey_hsd(value ~ dose)
+```
+
+This is an odd pattern of data. We have a significant ANOVA, but our Tukey's post-hoc tests don't reveal any significant differences (likely because the package I'm using isn't able to correct the pairwise comparisons for a repeated measures analysis). Let's see if graphing the data clears things up:
+
+```{r inactive-viz}
+inactive_long %>%
+  ggbarplot(x = "dose",
+            y = "value",
+            add = c("mean_se"),
+            fill = "darkgrey",
+            ylab = "Inactive Lever Presses")
+```
+
+Based on this, if I had to guess I'd probably say the comparison between the LO and HI groups is what the ANOVA picked up on. In any case this is definitely our least important result -- interesting to see, but that's basically all.
+
+So in sum, nociceptin seems not to have an impact on active lever pressing, but it does have an effect on inactive pressing. This suggests that it doesn't necessarily increase motivation, but it may have a generally stimulatory effect on locomotor behavior.
