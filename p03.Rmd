@@ -2,4 +2,100 @@
 title: "Portfolio 3"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+The goal of this portfolio project is simple: to figure out what each one of rats' favorite food is.
+
+Here's a bit more detail (feel free to skip this part). Essentially, we want to determine what ratio of fat to sugar the rats prefer. Scientifically, this gives us a baseline reference point to see how some pharmacological manipulations subsequently affect preferences. Pragmatically, this also gives the lab something to point to going forward to say "this diet really *is* the most palatable" in future studies on hedonic eating. 
+
+In order to actually test which foods the rats like best, we placed them in chambers where they had simultaneous access to six diets.  On the far left of the chamber was pure fat -- in this case, literally Crisco in a dish. On the fat right was pure sugar -- again, literally Domino brand sugar cubes. In between those are 4 blends of sugar and fat in various ratios. In the data, all 6 diets are labeled by their **sugar** content from 0% to 100%.
+
+Since the next phase of my experiments involves testing each rat with access to their favorite diet by itself, I need to figure out what that diet was for each rat. Hence, this project.
+
+Let's start by loading the packages we'll need:
+
+```{r packages}
+library(tidyverse)
+library(readxl)
+```
+
+And the data:
+
+```{r load-data}
+day_one <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 1,
+                      col_names = TRUE)
+day_two <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 2,
+                      col_names = TRUE)
+day_three <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 3,
+                      col_names = TRUE)
+day_four <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 4,
+                      col_names = TRUE)
+day_five <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 5,
+                      col_names = TRUE)
+day_six <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 6,
+                      col_names = TRUE)
+day_seven <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 7,
+                      col_names = TRUE)
+```
+
+Just to get a sense of what we're dealing with, let's take a look at the first one of these datasets:
+
+```{r head}
+head(day_one)
+```
+
+There are a few things we need to do before we can meaningfully visualize this data. The first thing we need to do is convert all of these values from grams to kilocalories. This is because sugar and fat have different energy densities: fat has 9kcal per gram, while sugar only has 4. Converting to kilocalories therefore allows us to standardize intake across diets
+
+```{r kcal-convert}
+# Calculating kcal density per gram for each diet
+zero <- 9
+twenty <- (0.8 * 9) + (0.2 * 4)
+forty <- (0.6 * 9) + (0.4 * 4)
+sixty <- (0.4 * 9) + (0.6 * 4)
+eighty <- (0.2 * 9) + (0.8 * 4)
+hundred <- 4
+
+#renaming columns to make them easier to work with
+
+columns <- c('rat', 'zeropercent', 'twentypercent', 'fortypercent', 'sixtypercent', 'eightypercent', 'hundredpercent', 'water')
+
+colnames(day_one) <- columns
+colnames(day_two) <- columns
+colnames(day_three) <- columns
+colnames(day_four) <- columns
+colnames(day_five) <- columns
+colnames(day_six) <- columns
+colnames(day_seven) <- columns
+
+#create duplicates of each dataframe that we can mess with without editing originals
+
+day_one_kcal <- day_one
+day_two_kcal <- day_two
+day_three_kcal <- day_three
+day_four_kcal <- day_four
+day_five_kcal <- day_five
+day_six_kcal <- day_six
+day_seven_kcal <- day_seven
+
+#use mutate to multiply each column in each duplicate dataframe by appropriate conversion factors
+
+kcal_datasets <- list(day_one_kcal,
+              day_two_kcal,
+              day_three_kcal,
+              day_four_kcal,
+              day_five_kcal,
+              day_six_kcal,
+              day_seven_kcal)
+
+for (item in kcal_datasets) {
+item$zeropercent <- item$zeropercent*9
+}
+
+```
+
+

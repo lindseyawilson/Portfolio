@@ -13,7 +13,7 @@
 
 <title>Portfolio 3</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,13 +295,119 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
+<p>The goal of this portfolio project is simple: to figure out what each
+one of rats’ favorite food is.</p>
+<p>Here’s a bit more detail (feel free to skip this part). Essentially,
+we want to determine what ratio of fat to sugar the rats prefer.
+Scientifically, this gives us a baseline reference point to see how some
+pharmacological manipulations subsequently affect preferences.
+Pragmatically, this also gives the lab something to point to going
+forward to say “this diet really <em>is</em> the most palatable” in
+future studies on hedonic eating.</p>
+<p>In order to actually test which foods the rats like best, we placed
+them in chambers where they had simultaneous access to six diets. On the
+far left of the chamber was pure fat – in this case, literally Crisco in
+a dish. On the fat right was pure sugar – again, literally Domino brand
+sugar cubes. In between those are 4 blends of sugar and fat in various
+ratios. In the data, all 6 diets are labeled by their
+<strong>sugar</strong> content from 0% to 100%.</p>
+<p>Since the next phase of my experiments involves testing each rat with
+access to their favorite diet by itself, I need to figure out what that
+diet was for each rat. Hence, this project.</p>
+<p>Let’s start by loading the packages we’ll need:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.3.0      ✔ stringr 1.5.0 
+## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(readxl)</code></pre>
+<p>And the data:</p>
+<pre class="r"><code>day_one &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 1,
+                      col_names = TRUE)
+day_two &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 2,
+                      col_names = TRUE)
+day_three &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 3,
+                      col_names = TRUE)
+day_four &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 4,
+                      col_names = TRUE)
+day_five &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 5,
+                      col_names = TRUE)
+day_six &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 6,
+                      col_names = TRUE)
+day_seven &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 7,
+                      col_names = TRUE)</code></pre>
+<p>Just to get a sense of what we’re dealing with, let’s take a look at
+the first one of these datasets:</p>
+<pre class="r"><code>head(day_one)</code></pre>
+<pre><code>## # A tibble: 6 × 8
+##   Rat      `0`  `0.2` `0.4`  `0.6` `0.8`   `1`  Water
+##   &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 IC1   0.490  0.580  0.740 0.0800  2.07 0.440 0.0600
+## 2 IC2   3.87   0.570  0.550 0.720   1.26 0.480 0.220 
+## 3 IC3   0.0300 0.0900 0.190 0.0500  1.68 1.80  1.33  
+## 4 IC4   1.25   0.660  0.410 0       1.12 0.580 0.560 
+## 5 IC5   0.0600 0.0500 0.210 0.490   1.34 1.38  0.300 
+## 6 IC6   0.220  0.180  0.330 0.150   1.07 2.63  0.320</code></pre>
+<p>There are a few things we need to do before we can meaningfully
+visualize this data. The first thing we need to do is convert all of
+these values from grams to kilocalories. This is because sugar and fat
+have different energy densities: fat has 9kcal per gram, while sugar
+only has 4. Converting to kilocalories therefore allows us to
+standardize intake across diets</p>
+<pre class="r"><code># Calculating kcal density per gram for each diet
+zero &lt;- 9
+twenty &lt;- (0.8 * 9) + (0.2 * 4)
+forty &lt;- (0.6 * 9) + (0.4 * 4)
+sixty &lt;- (0.4 * 9) + (0.6 * 4)
+eighty &lt;- (0.2 * 9) + (0.8 * 4)
+hundred &lt;- 4
+
+#renaming columns to make them easier to work with
+
+columns &lt;- c(&#39;rat&#39;, &#39;zeropercent&#39;, &#39;twentypercent&#39;, &#39;fortypercent&#39;, &#39;sixtypercent&#39;, &#39;eightypercent&#39;, &#39;hundredpercent&#39;, &#39;water&#39;)
+
+colnames(day_one) &lt;- columns
+colnames(day_two) &lt;- columns
+colnames(day_three) &lt;- columns
+colnames(day_four) &lt;- columns
+colnames(day_five) &lt;- columns
+colnames(day_six) &lt;- columns
+colnames(day_seven) &lt;- columns
+
+#create duplicates of each dataframe that we can mess with without editing originals
+
+day_one_kcal &lt;- day_one
+day_two_kcal &lt;- day_two
+day_three_kcal &lt;- day_three
+day_four_kcal &lt;- day_four
+day_five_kcal &lt;- day_five
+day_six_kcal &lt;- day_six
+day_seven_kcal &lt;- day_seven
+
+#use mutate to multiply each column in each duplicate dataframe by appropriate conversion factors
+
+kcal_datasets &lt;- list(day_one_kcal,
+              day_two_kcal,
+              day_three_kcal,
+              day_four_kcal,
+              day_five_kcal,
+              day_six_kcal,
+              day_seven_kcal)
+
+for (item in kcal_datasets) {
+item$zeropercent &lt;- item$zeropercent*9
+}</code></pre>
 
 
 
