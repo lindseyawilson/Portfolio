@@ -360,22 +360,13 @@ the first one of these datasets:</p>
 ## 5 IC5   0.0600 0.0500 0.210 0.490   1.34 1.38  0.300 
 ## 6 IC6   0.220  0.180  0.330 0.150   1.07 2.63  0.320</code></pre>
 <p>There are a few things we need to do before we can meaningfully
-visualize this data. The first thing we need to do is convert all of
-these values from grams to kilocalories. This is because sugar and fat
-have different energy densities: fat has 9kcal per gram, while sugar
-only has 4. Converting to kilocalories therefore allows us to
-standardize intake across diets</p>
-<pre class="r"><code># Calculating kcal density per gram for each diet
-zero &lt;- 9
-twenty &lt;- (0.8 * 9) + (0.2 * 4)
-forty &lt;- (0.6 * 9) + (0.4 * 4)
-sixty &lt;- (0.4 * 9) + (0.6 * 4)
-eighty &lt;- (0.2 * 9) + (0.8 * 4)
-hundred &lt;- 4
-
-#renaming columns to make them easier to work with
-
-columns &lt;- c(&#39;rat&#39;, &#39;zeropercent&#39;, &#39;twentypercent&#39;, &#39;fortypercent&#39;, &#39;sixtypercent&#39;, &#39;eightypercent&#39;, &#39;hundredpercent&#39;, &#39;water&#39;)
+visualize this data. The first thing we need to do is average these
+dataframes together and convert the values from grams to kilocalories.
+This is because sugar and fat have different energy densities: fat has
+9kcal per gram, while sugar only has 4. Converting to kilocalories
+therefore allows us to standardize intake across diets</p>
+<pre class="r"><code>##rename columns to something workable
+columns &lt;- c(&#39;rat&#39;, &#39;zero&#39;, &#39;twenty&#39;, &#39;forty&#39;, &#39;sixty&#39;, &#39;eighty&#39;, &#39;hundred&#39;, &#39;water&#39;)
 
 colnames(day_one) &lt;- columns
 colnames(day_two) &lt;- columns
@@ -385,29 +376,35 @@ colnames(day_five) &lt;- columns
 colnames(day_six) &lt;- columns
 colnames(day_seven) &lt;- columns
 
-#create duplicates of each dataframe that we can mess with without editing originals
+##average the datasets together
 
-day_one_kcal &lt;- day_one
-day_two_kcal &lt;- day_two
-day_three_kcal &lt;- day_three
-day_four_kcal &lt;- day_four
-day_five_kcal &lt;- day_five
-day_six_kcal &lt;- day_six
-day_seven_kcal &lt;- day_seven
+#convert dataframes to matrices
 
-#use mutate to multiply each column in each duplicate dataframe by appropriate conversion factors
+m1 &lt;- data.matrix(day_one)
+m2 &lt;- data.matrix(day_two)
+m3 &lt;- data.matrix(day_three)
+m4 &lt;- data.matrix(day_four)
+m5 &lt;- data.matrix(day_five)
+m6 &lt;- data.matrix(day_six)
+m7 &lt;- data.matrix(day_seven)
 
-kcal_datasets &lt;- list(day_one_kcal,
-              day_two_kcal,
-              day_three_kcal,
-              day_four_kcal,
-              day_five_kcal,
-              day_six_kcal,
-              day_seven_kcal)
+#average those matrices together and turn the result back into a data frame
 
-for (item in kcal_datasets) {
-item$zeropercent &lt;- item$zeropercent*9
-}</code></pre>
+m_avg &lt;- (m1 + m2 + m3 + m4 + m5 + m6 + m7)/7
+avg &lt;- as.data.frame(m_avg)
+
+
+## mutliply each column by the appropriate value
+avg_kcal &lt;- avg
+avg_kcal$zero &lt;- avg_kcal$zero*9
+avg_kcal$twenty &lt;- avg_kcal$twenty*8
+avg_kcal$forty &lt;- avg_kcal$forty*7
+avg_kcal$sixty &lt;- avg_kcal$sixty*6
+avg_kcal$eighty &lt;- avg_kcal$eighty*5
+avg_kcal$hundred &lt;- avg_kcal$hundred*4</code></pre>
+<p>We’re also going to go ahead and get rid of the water column (because
+water doesn’t have any calories) and we’re going to change any negative
+values to zeroes</p>
 
 
 

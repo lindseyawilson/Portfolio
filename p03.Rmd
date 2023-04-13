@@ -49,20 +49,12 @@ Just to get a sense of what we're dealing with, let's take a look at the first o
 head(day_one)
 ```
 
-There are a few things we need to do before we can meaningfully visualize this data. The first thing we need to do is convert all of these values from grams to kilocalories. This is because sugar and fat have different energy densities: fat has 9kcal per gram, while sugar only has 4. Converting to kilocalories therefore allows us to standardize intake across diets
+There are a few things we need to do before we can meaningfully visualize this data. The first thing we need to do is average these dataframes together and convert the values from grams to kilocalories. This is because sugar and fat have different energy densities: fat has 9kcal per gram, while sugar only has 4. Converting to kilocalories therefore allows us to standardize intake across diets
+
 
 ```{r kcal-convert}
-# Calculating kcal density per gram for each diet
-zero <- 9
-twenty <- (0.8 * 9) + (0.2 * 4)
-forty <- (0.6 * 9) + (0.4 * 4)
-sixty <- (0.4 * 9) + (0.6 * 4)
-eighty <- (0.2 * 9) + (0.8 * 4)
-hundred <- 4
-
-#renaming columns to make them easier to work with
-
-columns <- c('rat', 'zeropercent', 'twentypercent', 'fortypercent', 'sixtypercent', 'eightypercent', 'hundredpercent', 'water')
+##rename columns to something workable
+columns <- c('rat', 'zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred', 'water')
 
 colnames(day_one) <- columns
 colnames(day_two) <- columns
@@ -72,30 +64,36 @@ colnames(day_five) <- columns
 colnames(day_six) <- columns
 colnames(day_seven) <- columns
 
-#create duplicates of each dataframe that we can mess with without editing originals
+##average the datasets together
 
-day_one_kcal <- day_one
-day_two_kcal <- day_two
-day_three_kcal <- day_three
-day_four_kcal <- day_four
-day_five_kcal <- day_five
-day_six_kcal <- day_six
-day_seven_kcal <- day_seven
+#convert dataframes to matrices
 
-#use mutate to multiply each column in each duplicate dataframe by appropriate conversion factors
+m1 <- data.matrix(day_one)
+m2 <- data.matrix(day_two)
+m3 <- data.matrix(day_three)
+m4 <- data.matrix(day_four)
+m5 <- data.matrix(day_five)
+m6 <- data.matrix(day_six)
+m7 <- data.matrix(day_seven)
 
-kcal_datasets <- list(day_one_kcal,
-              day_two_kcal,
-              day_three_kcal,
-              day_four_kcal,
-              day_five_kcal,
-              day_six_kcal,
-              day_seven_kcal)
+#average those matrices together and turn the result back into a data frame
 
-for (item in kcal_datasets) {
-item$zeropercent <- item$zeropercent*9
-}
+m_avg <- (m1 + m2 + m3 + m4 + m5 + m6 + m7)/7
+avg <- as.data.frame(m_avg)
 
+
+## mutliply each column by the appropriate value
+avg_kcal <- avg
+avg_kcal$zero <- avg_kcal$zero*9
+avg_kcal$twenty <- avg_kcal$twenty*8
+avg_kcal$forty <- avg_kcal$forty*7
+avg_kcal$sixty <- avg_kcal$sixty*6
+avg_kcal$eighty <- avg_kcal$eighty*5
+avg_kcal$hundred <- avg_kcal$hundred*4
 ```
 
+We're also going to go ahead and get rid of the water column (because water doesn't have any calories) and we're going to change any negative values to zeroes
 
+```{r cleaning}
+
+```
