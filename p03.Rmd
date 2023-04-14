@@ -15,6 +15,7 @@ Let's start by loading the packages we'll need:
 ```{r packages}
 library(tidyverse)
 library(readxl)
+library(ggpubr)
 ```
 
 And the data:
@@ -92,8 +93,45 @@ avg_kcal$eighty <- avg_kcal$eighty*5
 avg_kcal$hundred <- avg_kcal$hundred*4
 ```
 
-We're also going to go ahead and get rid of the water column (because water doesn't have any calories) and we're going to change any negative values to zeroes
+We're also going to go ahead and get rid of the water column (because water doesn't have any calories) and we're going to change any negative values to zeroes.
 
 ```{r cleaning}
+#get rid of water column
 
+avg_kcal <- avg_kcal %>%
+  select(rat:hundred)
+
+#correct negative values to zeroes
+
+m_avg_kcal <- data.matrix(avg_kcal)
+m_avg_kcal <- pmax(m_avg_kcal, 0)
+avg_kcal <- as.data.frame(m_avg_kcal)
+
+#something weird happens with the rat column during the matrix conversion
+#to fix this, I'm just going to manually assign values for that column
+
+rat_names <- c("IC1", "IC2", "IC3", "IC4", "IC5", "IC6", "IC7", "IC8", "IC9", "IC10", "IC11", "IC12")
+
+avg_kcal <- avg_kcal %>%
+ select(zero:hundred) %>%
+  mutate(real_rat_name = rat_names)
+```
+
+Now that our data is cleaned, we need to reformat it for ggplot. The data as we have it is pretty wide, and we need it to be long to visualize it the way we want.
+
+
+```{r reformat}
+avg_kcal_long <- avg_kcal %>%
+  pivot_longer(cols = -real_rat_name,
+               names_to = "diet",
+               values_to = "kcals")
+```
+
+And now we're ready for visualization! I'm thinking a bar graph with `diet` on the x-axis and `kcals` on the y-axis is the best way to go. Also, since we want to visualize intake separately for each rat, it makes sense to facet by the `rat` variable.
+
+```{r kcal-bar-graphs}
+avg_kcal_long %>%
+ggbarplot(x = "diet",
+          y = "kcals",
+          facet.by = "real_rat_name")
 ```
