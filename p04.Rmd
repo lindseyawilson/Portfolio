@@ -2,4 +2,48 @@
 title: "Portfolio 4"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+The goal of this portfolio is to generate some data for my 312 students' final paper project.
+
+Essentially, the students were given a scenario in which they are researchers interested in the effect of physical resource depletion on perceptions of distance. The idea is that objects will feel further away if people's resources are depleted, and they'll feel closer if their resources are replenished. We're interested in manipulating physical resources by having participants wear a heavy backpack and then giving them a beverage (in this case, a soda) that varies in two respects: whether it contains sugar or artificial sweetener, and whether or not in contains caffeine.  After wearing their backpack and drinking their drink, participants will be taken into a hallway and shown an object that is 50 ft. away. The dependent variable is their judgement of how far away that object is.
+
+Therefore, what I ultimately want to generate is a dataset with four columns: 1.) participant ID, 2.) sugar vs. artificial sweetener, 3.) caffeine vs. caffeine free 4.) distance judgement.
+
+Let's load what we need:
+
+```{r setup}
+library(tidyverse)
+library(ggpubr)
+```
+
+Next I need to decide how I want the data to come out. I want there to be a main effect of sugar, no main effect of caffeine, and an interaction such that the effect of sugar is stronger with caffeine than without. That means picking cell means that give me that pattern. I'll be able to tweak this after the fact if we need to, but lets just start with the following means:
+
+No sugar, no caffeine: 55ft (SD = 3ft)
+No sugar, caffeine: 65ft (SD = 2.5ft)
+Sugar, no caffeine: 52 ft (SD = 3ft)
+Sugar, caffeine: 49 ft (SD = 2 ft)
+
+We can start by creating the dataframe and the participant ID variable:
+
+```{r create-dataframe}
+ID <- c(1:120)
+data <- data.frame(ID)
+```
+
+And then we can assign the caffeine and sugar variables:
+
+```{r sugar-caffeine}
+data <- data %>%
+        mutate(sugar = case_when(ID <= 60 ~ 0,
+                                 ID > 60 ~ 1),
+               caffeine = case_when(ID <=30 ~ 0,
+                                    ID > 30 & ID <= 60 ~ 1,
+                                    ID > 60 & ID <=90 ~ 0,
+                                    ID > 90 ~ 1)
+              )
+```
+
+And finally we can add our random variables:
+
+```{r distance}
+
+```
