@@ -440,8 +440,16 @@ variable.</p>
 <pre class="r"><code>avg_kcal_long %&gt;%
 ggbarplot(x = &quot;diet&quot;,
           y = &quot;kcals&quot;,
-          facet.by = &quot;real_rat_name&quot;)</code></pre>
+          facet.by = &quot;real_rat_name&quot;,
+          font.xtickslab = 5)</code></pre>
 <p><img src="p03_files/figure-html/kcal-bar-graphs-1.png" width="672" /></p>
+<p>And here we have it! Each rat’s favorite diet is just the tallest
+column. This also gives us a sense for the strength of the preference
+for each rat. For example, IC2 strongly preferred the 0% diet to all
+other diets, but IC5 and IC6 sort of sampled all the diets.</p>
+<p>What’s interesting is that no one preferred the middle diets (40% and
+60%), which is what we expected to see. It’ll be interesting to figure
+out what patterns come out in this data!</p>
 
 
 

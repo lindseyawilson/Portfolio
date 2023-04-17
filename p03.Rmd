@@ -4,9 +4,9 @@ title: "Portfolio 3"
 
 The goal of this portfolio project is simple: to figure out what each one of rats' favorite food is.
 
-Here's a bit more detail (feel free to skip this part). Essentially, we want to determine what ratio of fat to sugar the rats prefer. Scientifically, this gives us a baseline reference point to see how some pharmacological manipulations subsequently affect preferences. Pragmatically, this also gives the lab something to point to going forward to say "this diet really *is* the most palatable" in future studies on hedonic eating. 
+Here's a bit more detail (feel free to skip this part). Essentially, we want to determine what ratio of fat to sugar the rats prefer. Scientifically, this gives us a baseline reference point to see how some pharmacological manipulations subsequently affect preferences. Pragmatically, this also gives the lab something to point to going forward to say "this diet really *is* the most palatable" in future studies on hedonic eating.
 
-In order to actually test which foods the rats like best, we placed them in chambers where they had simultaneous access to six diets.  On the far left of the chamber was pure fat -- in this case, literally Crisco in a dish. On the fat right was pure sugar -- again, literally Domino brand sugar cubes. In between those are 4 blends of sugar and fat in various ratios. In the data, all 6 diets are labeled by their **sugar** content from 0% to 100%.
+In order to actually test which foods the rats like best, we placed them in chambers where they had simultaneous access to six diets. On the far left of the chamber was pure fat -- in this case, literally Crisco in a dish. On the fat right was pure sugar -- again, literally Domino brand sugar cubes. In between those are 4 blends of sugar and fat in various ratios. In the data, all 6 diets are labeled by their **sugar** content from 0% to 100%.
 
 Since the next phase of my experiments involves testing each rat with access to their favorite diet by itself, I need to figure out what that diet was for each rat. Hence, this project.
 
@@ -51,7 +51,6 @@ head(day_one)
 ```
 
 There are a few things we need to do before we can meaningfully visualize this data. The first thing we need to do is average these dataframes together and convert the values from grams to kilocalories. This is because sugar and fat have different energy densities: fat has 9kcal per gram, while sugar only has 4. Converting to kilocalories therefore allows us to standardize intake across diets
-
 
 ```{r kcal-convert}
 ##rename columns to something workable
@@ -119,7 +118,6 @@ avg_kcal <- avg_kcal %>%
 
 Now that our data is cleaned, we need to reformat it for ggplot. The data as we have it is pretty wide, and we need it to be long to visualize it the way we want.
 
-
 ```{r reformat}
 avg_kcal_long <- avg_kcal %>%
   pivot_longer(cols = -real_rat_name,
@@ -133,5 +131,10 @@ And now we're ready for visualization! I'm thinking a bar graph with `diet` on t
 avg_kcal_long %>%
 ggbarplot(x = "diet",
           y = "kcals",
-          facet.by = "real_rat_name")
+          facet.by = "real_rat_name",
+          font.xtickslab = 5)
 ```
+
+And here we have it! Each rat's favorite diet is just the tallest column. This also gives us a sense for the strength of the preference for each rat. For example, IC2 strongly preferred the 0% diet to all other diets, but IC5 and IC6 sort of sampled all the diets.
+
+What's interesting is that no one preferred the middle diets (40% and 60%), which is what we expected to see. It'll be interesting to figure out what patterns come out in this data!
