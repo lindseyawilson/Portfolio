@@ -13,6 +13,8 @@ Let's load what we need:
 ```{r setup}
 library(tidyverse)
 library(ggpubr)
+library(rstatix)
+library(haven)
 ```
 
 Next I need to decide how I want the data to come out. I want there to be a main effect of sugar, no main effect of caffeine, and an interaction such that the effect of sugar is stronger with caffeine than without. That means picking cell means that give me that pattern. I'll be able to tweak this after the fact if we need to, but lets just start with the following means:
@@ -29,7 +31,7 @@ ID <- c(1:120)
 data <- data.frame(ID)
 ```
 
-And then we can assign the caffeine and sugar variables:
+We can then assign the caffeine and sugar variables:
 
 ```{r sugar-caffeine}
 data <- data %>%
@@ -45,5 +47,71 @@ data <- data %>%
 And finally we can add our random variables:
 
 ```{r distance}
+random <- c(rnorm(30, mean = 55, sd = 10),
+            rnorm(30, mean = 65, sd = 12),
+            rnorm(30, mean = 52, sd = 14),
+            rnorm(30, mean = 49, sd = 9))
 
+data <- data %>%
+  mutate(distance_estimate = random)
+```
+
+
+And just like that we have our data! I've saved the data manually so that when you run the subsequent steps of this code, you'll see what I'm seeing and not whatever the randomization generates for you. Note that this means the data frame you just generated won't match with the data we'll be using from here on out.
+
+Let's check our data out to make sure we have what we were aiming for. First lets run our ANOVA:
+
+```{r anova}
+#load data
+data2 <- read_sav("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p04/backpack_data_sectionB.sav")
+
+#run ANOVA
+anova <- aov(distance_estimate ~ sugar*caffeine, data = data)
+summary(anova)
+```
+
+This is what we wanted: a main effect of sugar and an interaction, but no main effect of caffeine.
+
+Let's also make a visualization to check our data:
+
+```{r bar}
+#Make descriptives
+descriptives <- data2 %>%
+  group_by(sugar, caffeine) %>%
+  summarize(mean_est = mean(distance_estimate),
+            sd_est = sd(distance_estimate))
+
+ggplot(data = descriptives,
+       mapping = aes(x = factor(sugar),
+                     y = mean_est,
+                     fill = factor(caffeine))) + 
+  geom_col(position = "dodge") + 
+  geom_errorbar(position = position_dodge(width = 0.9),
+                alpha = 0.5,
+                width = 0.5,
+                mapping = aes(y = mean_est,
+                              ymin = mean_est - sd_est,
+                              ymax = mean_est + sd_est))+
+  scale_fill_discrete(labels = c('Caffeine', 'No Caffeine'))+
+  scale_x_discrete(labels = c('No Sugar', 'Sugar')) + 
+  labs(title = "Effects of Sugar and Caffeine Consumption on Distance Perception",
+       x = "Sugar",
+       y = "Distance Estimate",
+       fill = "Caffeine")
+```
+
+This looks good! Let's throw out another visualization just for fun:
+
+```{r violin}
+ggplot(data = data2,
+       mapping = aes(x = factor(sugar),
+                     y = distance_estimate,
+                     fill = factor(caffeine))) + 
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  scale_fill_discrete(labels = c('Caffeine', 'No Caffeine'))+
+  scale_x_discrete(labels = c('No Sugar', 'Sugar')) + 
+  labs(title = "Effects of Sugar and Caffeine Consumption on Distance Perception",
+       x = "Sugar",
+       y = "Distance Estimate",
+       fill = "Caffeine")
 ```

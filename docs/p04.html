@@ -322,7 +322,15 @@ caffeine vs. caffeine free 4.) distance judgement.</p>
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(ggpubr)</code></pre>
+<pre class="r"><code>library(ggpubr)
+library(rstatix)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rstatix&#39;
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
+<pre class="r"><code>library(haven)</code></pre>
 <p>Next I need to decide how I want the data to come out. I want there
 to be a main effect of sugar, no main effect of caffeine, and an
 interaction such that the effect of sugar is stronger with caffeine than
@@ -336,7 +344,7 @@ with the following means:</p>
 variable:</p>
 <pre class="r"><code>ID &lt;- c(1:120)
 data &lt;- data.frame(ID)</code></pre>
-<p>And then we can assign the caffeine and sugar variables:</p>
+<p>We can then assign the caffeine and sugar variables:</p>
 <pre class="r"><code>data &lt;- data %&gt;%
         mutate(sugar = case_when(ID &lt;= 60 ~ 0,
                                  ID &gt; 60 ~ 1),
@@ -346,6 +354,75 @@ data &lt;- data.frame(ID)</code></pre>
                                     ID &gt; 90 ~ 1)
               )</code></pre>
 <p>And finally we can add our random variables:</p>
+<pre class="r"><code>random &lt;- c(rnorm(30, mean = 55, sd = 10),
+            rnorm(30, mean = 65, sd = 12),
+            rnorm(30, mean = 52, sd = 14),
+            rnorm(30, mean = 49, sd = 9))
+
+data &lt;- data %&gt;%
+  mutate(distance_estimate = random)</code></pre>
+<p>And just like that we have our data! I’ve saved the data manually so
+that when you run the subsequent steps of this code, you’ll see what I’m
+seeing and not whatever the randomization generates for you. Note that
+this means the data frame you just generated won’t match with the data
+we’ll be using from here on out.</p>
+<p>Let’s check our data out to make sure we have what we were aiming
+for. First lets run our ANOVA:</p>
+<pre class="r"><code>#load data
+data2 &lt;- read_sav(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p04/backpack_data_sectionB.sav&quot;)
+
+#run ANOVA
+anova &lt;- aov(distance_estimate ~ sugar*caffeine, data = data)
+summary(anova)</code></pre>
+<pre><code>##                 Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+## sugar            1   3796    3796  29.200 3.53e-07 ***
+## caffeine         1    775     775   5.959 0.016151 *  
+## sugar:caffeine   1   1945    1945  14.958 0.000182 ***
+## Residuals      116  15080     130                     
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>This is what we wanted: a main effect of sugar and an interaction,
+but no main effect of caffeine.</p>
+<p>Let’s also make a visualization to check our data:</p>
+<pre class="r"><code>#Make descriptives
+descriptives &lt;- data2 %&gt;%
+  group_by(sugar, caffeine) %&gt;%
+  summarize(mean_est = mean(distance_estimate),
+            sd_est = sd(distance_estimate))</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;sugar&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code>ggplot(data = descriptives,
+       mapping = aes(x = factor(sugar),
+                     y = mean_est,
+                     fill = factor(caffeine))) + 
+  geom_col(position = &quot;dodge&quot;) + 
+  geom_errorbar(position = position_dodge(width = 0.9),
+                alpha = 0.5,
+                width = 0.5,
+                mapping = aes(y = mean_est,
+                              ymin = mean_est - sd_est,
+                              ymax = mean_est + sd_est))+
+  scale_fill_discrete(labels = c(&#39;Caffeine&#39;, &#39;No Caffeine&#39;))+
+  scale_x_discrete(labels = c(&#39;No Sugar&#39;, &#39;Sugar&#39;)) + 
+  labs(title = &quot;Effects of Sugar and Caffeine Consumption on Distance Perception&quot;,
+       x = &quot;Sugar&quot;,
+       y = &quot;Distance Estimate&quot;,
+       fill = &quot;Caffeine&quot;)</code></pre>
+<p><img src="p04_files/figure-html/bar-1.png" width="672" /></p>
+<p>This looks good! Let’s throw out another visualization just for
+fun:</p>
+<pre class="r"><code>ggplot(data = data2,
+       mapping = aes(x = factor(sugar),
+                     y = distance_estimate,
+                     fill = factor(caffeine))) + 
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75)) +
+  scale_fill_discrete(labels = c(&#39;Caffeine&#39;, &#39;No Caffeine&#39;))+
+  scale_x_discrete(labels = c(&#39;No Sugar&#39;, &#39;Sugar&#39;)) + 
+  labs(title = &quot;Effects of Sugar and Caffeine Consumption on Distance Perception&quot;,
+       x = &quot;Sugar&quot;,
+       y = &quot;Distance Estimate&quot;,
+       fill = &quot;Caffeine&quot;)</code></pre>
+<p><img src="p04_files/figure-html/violin-1.png" width="672" /></p>
 
 
 
