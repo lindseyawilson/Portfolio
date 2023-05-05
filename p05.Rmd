@@ -2,4 +2,50 @@
 title: "Portfolio 5"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+I found an interesting looking dataset on the Tidy Tuesday site about age gaps in movies, and I want to use this portfolio to see if I can uncover some interesting patterns in it.
+
+The link the dataset is here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-02-14/readme.md
+
+Let's load what we need to start below:
+
+```{r setup, message = FALSE}
+library(tidyverse)
+
+movies <- read.csv("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p05/movies.csv")
+```
+
+The first question that jumps out: what was the movie with the greatest age gap between actors playing love interests?
+
+```{r greatest-gap}
+max_diff <- movies$Age.Difference %>%
+  max()
+max_diff
+
+movies %>%
+  filter(Age.Difference == max_diff) %>%
+  select(Movie.Name, Release.Year)
+```
+Similarly, we can see which movies have no age gap between leads:
+
+```{r no-gap}
+movies %>%
+  filter(Age.Difference == 0) %>%
+  select(Movie.Name, Release.Year)
+```
+
+Another question: how have age gaps in movies changed over time? I can imagine that really huge age gaps might have been more common in the past than they are today, and it would be interesting to visualize that change over time:
+
+```{r gap-over-time}
+movies %>%
+  ggplot(aes(x = Release.Year, y = Age.Difference)) + 
+  geom_jitter() +
+  geom_smooth(method = "lm")
+```
+
+
+
+
+
+
+
+

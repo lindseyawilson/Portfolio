@@ -13,7 +13,7 @@
 
 <title>Portfolio 5</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,13 +295,72 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
+<p>I found an interesting looking dataset on the Tidy Tuesday site about
+age gaps in movies, and I want to use this portfolio to see if I can
+uncover some interesting patterns in it.</p>
+<p>The link the dataset is here: <a
+href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-02-14/readme.md"
+class="uri">https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-02-14/readme.md</a></p>
+<p>Let’s load what we need to start below:</p>
+<pre class="r"><code>library(tidyverse)
+
+movies &lt;- read.csv(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p05/movies.csv&quot;)</code></pre>
+<p>The first question that jumps out: what was the movie with the
+greatest age gap between actors playing love interests?</p>
+<pre class="r"><code>max_diff &lt;- movies$Age.Difference %&gt;%
+  max()
+max_diff</code></pre>
+<pre><code>## [1] 52</code></pre>
+<pre class="r"><code>movies %&gt;%
+  filter(Age.Difference == max_diff) %&gt;%
+  select(Movie.Name, Release.Year)</code></pre>
+<pre><code>##         Movie.Name Release.Year
+## 1 Harold and Maude         1971</code></pre>
+<p>Similarly, we can see which movies have no age gap between leads:</p>
+<pre class="r"><code>movies %&gt;%
+  filter(Age.Difference == 0) %&gt;%
+  select(Movie.Name, Release.Year)</code></pre>
+<pre><code>##                               Movie.Name Release.Year
+## 1             10 Things I Hate About You         1999
+## 2  A Happening of Monumental Proportions         2017
+## 3                         A Simple Favor         2018
+## 4                        American Hustle         2013
+## 5                           American Pie         1999
+## 6                         Blue Valentine         2010
+## 7                    Catch Me If You Can         2002
+## 8                                Chicago         2002
+## 9                   Daddy&#39;s Little Girls         2007
+## 10                                Empire         2002
+## 11                     Good Will Hunting         1997
+## 12           He&#39;s Just Not That Into You         2009
+## 13                     Killing Me Softly         2002
+## 14                            Magic Mike         2012
+## 15                         Me Before You         2016
+## 16                       Mona Lisa Smile         2003
+## 17                       Red Riding Hood         2011
+## 18                She&#39;s Out of My League         2010
+## 19                              Slackers         2002
+## 20                             Soul Food         1997
+## 21                             Spanglish         2004
+## 22                                 Speed         1994
+## 23             Spider-Man: Far From Home         2019
+## 24                             The Crush         1993
+## 25                           The Holiday         2006
+## 26       The Hunger Games: Catching Fire         2013
+## 27                        The Lake House         2006
+## 28                               Tolkien         2019
+## 29                          Transformers         2007
+## 30                    X-Men: First Class         2015</code></pre>
+<p>Another question: how have age gaps in movies changed over time? I
+can imagine that really huge age gaps might have been more common in the
+past than they are today, and it would be interesting to visualize that
+change over time:</p>
+<pre class="r"><code>movies %&gt;%
+  ggplot(aes(x = Release.Year, y = Age.Difference)) + 
+  geom_jitter() +
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="p05_files/figure-html/gap-over-time-1.png" width="672" /></p>
 
 
 
