@@ -87,11 +87,6 @@ m_diff_year_age <- linear_reg() %>%
 tidy(m_diff_year_age)
 glance(m_diff_year_age)$adj.r.squared
 
-#movies %>%
- # ggplot(aes(x = Release.Year, y = Age.Difference, color = Actor.1.Age)) + 
-  #geom_jitter() +
-  #geom_smooth(method = "lm", fullrange = TRUE, se = FALSE)
-
 p <- plot_ly(movies,
   x = ~Release.Year, y = ~Age.Difference, z = ~Actor.1.Age,
   marker = list(size = 3, color = "lightgray", alpha = 0.5, 
