@@ -2,7 +2,7 @@
 title: "Portfolio 5"
 ---
 
-I found an interesting looking dataset on the Tidy Tuesday site about age gaps in movies, and I want to use this portfolio to see if I can uncover some interesting patterns in it.
+I found an interesting looking dataset on the Tidy Tuesday site about age gaps in movies, and I want to use this portfolio project to see if I can uncover some interesting patterns in it.
 
 The link the dataset is here: https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-02-14/readme.md
 
@@ -10,6 +10,9 @@ Let's load what we need to start below:
 
 ```{r setup, message = FALSE}
 library(tidyverse)
+library(parsnip)
+library(httr)
+library(plotly)
 
 movies <- read.csv("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p05/movies.csv")
 ```
@@ -42,10 +45,63 @@ movies %>%
   geom_smooth(method = "lm")
 ```
 
+It looks like I was right! To follow down this road, let's put release year into a linear model that predicts age difference and see how it does:
+
+```{r release-year-lm}
+m_diff_year <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(Age.Difference ~ Release.Year, data = movies)
+
+tidy(m_diff_year)
+glance(m_diff_year)$r.squared
+```
+
+So we do have a somewhat consistent relationship between release year and age difference. For every year that passes, the average age gap between leads is predicted to decrease by 0.11 years, and this model explains about 4% of the variance in age gap. The p-value for that slope is also extremely significant (p = 2.43e-13), so we can be confident it's a real effect.
+
+I want to see if we can explain more variance in age gap by adding the gender of the older person in the pair to the model. My gut intuition is that movies where the man is older have larger age gaps than movies where the woman is older:
+
+```{r lm-add-gender}
+m_diff_year_gender <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(Age.Difference ~ Release.Year*Actor.1.Gender, data = movies)
+
+tidy(m_diff_year_gender)
+glance(m_diff_year_gender)$adj.r.squared
+
+movies %>%
+  ggplot(aes(x = Release.Year, y = Age.Difference, color = Actor.1.Gender)) + 
+  geom_jitter() +
+  geom_smooth(method = "lm", fullrange = TRUE, se = FALSE)
+```
+
+Looks like I wasn't quite right. Descriptively, the older member of the pair being a woman does predict a smaller age gap, but neither this slope nor the interaction term are significant. Additionally, the adjusted R-squared basically doesn't increase at all, so we're clearly not explaining much more variance.
+
+Finally, let's replace the gender of the older member of the pair with the age of the older member of the pair. This model is bound to increase the amount of variance we can explain; large age gaps are only possible when one member of the pair is older:
 
 
+```{r lm-add-age}
+m_diff_year_age <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(Age.Difference ~ Release.Year*Actor.1.Age, data = movies)
 
+tidy(m_diff_year_age)
+glance(m_diff_year_age)$adj.r.squared
 
+#movies %>%
+ # ggplot(aes(x = Release.Year, y = Age.Difference, color = Actor.1.Age)) + 
+  #geom_jitter() +
+  #geom_smooth(method = "lm", fullrange = TRUE, se = FALSE)
 
-
-
+p <- plot_ly(movies,
+  x = ~Release.Year, y = ~Age.Difference, z = ~Actor.1.Age,
+  marker = list(size = 3, color = "lightgray", alpha = 0.5, 
+                line = list(color = "gray", width = 2))) %>%
+  add_markers() %>%
+  plotly::layout(scene = list(
+    xaxis = list(title = "Release Year"),
+    yaxis = list(title = "Age Difference"),
+    zaxis = list(title = "Older Actor Age")
+  )) %>%
+  config(displayModeBar = FALSE)
+p
+```
