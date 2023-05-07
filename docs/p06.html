@@ -295,9 +295,12 @@ $(document).ready(function () {
 </div>
 
 
+<div id="setup" class="section level2">
+<h2>Setup</h2>
 <p>I found another Tidy Tuesday dataset about measles vaccinations rates
-for schools around the country, and I want to see what patterns jump out
-in the data. Let’s load the data and the packages we’ll need here:</p>
+for schools around the country between 2017 and 2019, and I want to see
+what patterns jump out in the data. Let’s load the data and the packages
+we’ll need here:</p>
 <pre class="r"><code>library(tidyverse)
 library(tidytuesdayR)
 
@@ -306,12 +309,15 @@ tuesdata &lt;- tidytuesdayR::tt_load(&#39;2020-02-25&#39;)</code></pre>
 <pre><code>## 
 ##  Downloading file 1 of 1: `measles.csv`</code></pre>
 <pre class="r"><code>measles &lt;- tuesdata$measles</code></pre>
+</div>
+<div id="map" class="section level2">
+<h2>Map</h2>
 <p>First, let’s see what geographic area we’re working with in this
 dataset. Longitude and latitude are included for each school’s entry in
 the data, so we can just plot these against each other:</p>
 <pre class="r"><code>measles %&gt;%
   ggplot(aes(y = lat, x = lng)) +
-  geom_point()</code></pre>
+  geom_point(color = &quot;red&quot;)</code></pre>
 <pre><code>## Warning: Removed 1549 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="p06_files/figure-html/location-1.png" width="672" /></p>
 <p>Let’s see if the image makes a little more sense if I filter out
@@ -319,29 +325,39 @@ schools with a longitude greater than zero:</p>
 <pre class="r"><code>measles %&gt;%
   filter(lng &lt; 0) %&gt;%
   ggplot(aes(y = lat, x = lng)) +
-  geom_point()</code></pre>
+  geom_point(color = &quot;red&quot;)</code></pre>
 <p><img src="p06_files/figure-html/location-filtered-1.png" width="672" /></p>
-<p>So we’re missing data grom some states, but it looks. like we’ve got
-a decent portion of the US covered. Just out of curiosity, let’s see
-where the schools we just filtered out are actually located:</p>
-<pre class="r"><code>measles %&gt;%
-  filter(lng &gt; 0)</code></pre>
-<pre><code>## # A tibble: 88 × 16
+<p>So we’re missing data grom some states, but it looks like we’ve got a
+decent portion of the US covered. Just out of curiosity, let’s see where
+the schools we just filtered out are actually located:</p>
+<pre class="r"><code>measles_clean &lt;- measles %&gt;%
+  filter(lng &lt; 0)
+
+measles_clean</code></pre>
+<pre><code>## # A tibble: 64,476 × 16
 ##    index state   year    name   type  city  county district enroll   mmr overall
 ##    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;lgl&gt;     &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
-##  1  1122 Florida 2018-19 Kids … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           53    -1    94.3
-##  2  1959 Florida 2018-19 Rise … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           26    -1    88.5
-##  3  2140 Florida 2018-19 Kids … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           65    -1    80  
-##  4  2159 Florida 2018-19 Flori… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA            9    -1    77.8
-##  5  2165 Florida 2018-19 Flori… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           38    -1    76.3
-##  6     1 Vermont 2018-19 Addis… &lt;NA&gt;  &lt;NA&gt;  Addis… NA           65   100   100  
-##  7     6 Vermont 2018-19 Burke… &lt;NA&gt;  &lt;NA&gt;  Caled… NA          193   100   100  
-##  8     7 Vermont 2018-19 Canaa… &lt;NA&gt;  &lt;NA&gt;  Essex  NA          167   100    98.8
-##  9    15 Vermont 2018-19 Fairf… &lt;NA&gt;  &lt;NA&gt;  Frank… NA          223   100    97.8
-## 10    25 Vermont 2018-19 Leice… &lt;NA&gt;  &lt;NA&gt;  Addis… NA           57   100    98.2
-## # ℹ 78 more rows
+##  1     1 Arizona 2018-19 A J M… Publ… Noga… Santa… NA           51   100      -1
+##  2     2 Arizona 2018-19 Acade… Char… Tucs… Pima   NA           22   100      -1
+##  3     3 Arizona 2018-19 Acade… Char… Tucs… Pima   NA           85   100      -1
+##  4     4 Arizona 2018-19 Acade… Char… Phoe… Maric… NA           60   100      -1
+##  5     5 Arizona 2018-19 Accla… Char… Phoe… Maric… NA           43   100      -1
+##  6     6 Arizona 2018-19 Alfre… Publ… Phoe… Maric… NA           36   100      -1
+##  7     7 Arizona 2018-19 All A… Char… Phoe… Maric… NA           24   100      -1
+##  8     8 Arizona 2018-19 Ameri… Char… Yuma  Yuma   NA           22   100      -1
+##  9     9 Arizona 2018-19 Arizo… Priv… Phoe… Maric… NA           26   100      -1
+## 10    10 Arizona 2018-19 Arizo… Publ… San … Yuma   NA           78   100      -1
+## # ℹ 64,466 more rows
 ## # ℹ 5 more variables: xrel &lt;lgl&gt;, xmed &lt;dbl&gt;, xper &lt;dbl&gt;, lat &lt;dbl&gt;, lng &lt;dbl&gt;</code></pre>
-<p>A good first step would be just to make a histogram of vaccination
+<p>Apparently most of these schools are supposed to be in Vermont, but
+the points don’t fall into the continental United States when I plot
+them. We’re going to work with the filtered dataset moving forward, just
+because I don’t totally trust these data points to be accurate.</p>
+</div>
+<div id="merging-with-political-data" class="section level2">
+<h2>Merging with Political Data</h2>
+<p>A good first step towards figuring out what’s actually going on with
+vaccinations here would be just to make a histogram of vaccination
 rates, both overall and for measles specifically:</p>
 <pre class="r"><code>#Overall vaccination rate
 measles %&gt;%
@@ -361,6 +377,135 @@ substantially) positively skewed, but MMR vaccination appears to be more
 common than overall vaccination. This makes sense – the MMR vaccine is
 just one shot, but overall vaccination requires consistently sticking to
 a vaccine schedule.</p>
+<p>Now here’s what I’m curious about: does a state’s political
+affiliation influence the rates at which people in that state get
+vaccinated? These data were collected before COVID, so it would be
+interesting to see how closely vaccination rates and politics related in
+the pre-COVID era.</p>
+<p>To do this though, we first need info on the political affiliation of
+each state. Luckily, I was able to find a dataset from MIT giving
+detailed information about elections for each state since 1976. Let’s
+load that in below:</p>
+<pre class="r"><code>states &lt;- read_csv(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p06/1976-2020-president.csv&quot;)</code></pre>
+<p>Each entry in the dataset represents the performance of a given
+candidate in a given state for each presidential election since 1976.
+That means we’re going to have to do some pretty serious processing for
+this to be useful to us. That includes:</p>
+<ul>
+<li><p>Filtering the results to the 2016 election, as that was the most
+recent election before the data was collected</p></li>
+<li><p>Filtering out the candidates aside from those of the major party
+nominees. In this case, that means everyone except Hilary Clinton and
+Donald Trump</p></li>
+<li><p>Figuring out for each state which of those two candidates
+received the most votes in each state, and retaining the party
+affiliation of that candidate</p></li>
+</ul>
+<p>Let’s do that below:</p>
+<pre class="r"><code># Filter for 2016 election and for major party candidates
+states_2016 &lt;- states %&gt;%
+  filter(year == 2016) %&gt;%
+  filter(candidate == &quot;CLINTON, HILLARY&quot; | candidate == &quot;TRUMP, DONALD J.&quot;)
+
+#Calculate which candidate won more votes
+state_max_votes &lt;- states_2016 %&gt;%
+  group_by(state) %&gt;%
+  summarize(max(candidatevotes))
+
+
+names(state_max_votes)[2] &lt;- &quot;maxvotes&quot;
+
+state_winners &lt;- merge(states_2016, state_max_votes, by = &quot;state&quot;)
+
+#Filter out the losing candidate in each state
+state_winners &lt;- state_winners %&gt;%
+  filter(candidatevotes == maxvotes)
+
+#Save states and party affiliations as a standalone data frame
+state_parties &lt;- state_winners %&gt;%
+  select(state, party_simplified) %&gt;%
+  mutate(state = str_to_title(state))
+
+head(state_parties)</code></pre>
+<pre><code>##        state party_simplified
+## 1    Alabama       REPUBLICAN
+## 2     Alaska       REPUBLICAN
+## 3    Arizona       REPUBLICAN
+## 4   Arkansas       REPUBLICAN
+## 5 California         DEMOCRAT
+## 6   Colorado         DEMOCRAT</code></pre>
+<p>Looks like it worked! Now that we have out list of states and
+political affiliations, we can merge it with the measles data:</p>
+<pre class="r"><code>measles_politics &lt;- merge(measles_clean, state_parties,  by = &quot;state&quot;)</code></pre>
+</div>
+<div id="vaccinations-by-political-affiliation" class="section level2">
+<h2>Vaccinations by Political Affiliation</h2>
+<p>Now that we have the data formatted the way we want, we can take a
+look at what’s going on. Let’s visualize differences in vaccinations for
+red and blue states:</p>
+<pre class="r"><code># Overall vaccination
+measles_politics %&gt;%
+  filter(overall != -1) %&gt;%
+  ggplot(aes(x = overall, fill = party_simplified)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;)) + 
+  facet_wrap(~party_simplified)</code></pre>
+<p><img src="p06_files/figure-html/visualize-vaccination-by-politics-1.png" width="672" /></p>
+<pre class="r"><code># MMR vaccination specifically
+measles_politics %&gt;%
+  filter(mmr != -1) %&gt;%
+  ggplot(aes(x = mmr, fill = party_simplified)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;)) + 
+  facet_wrap(~party_simplified)</code></pre>
+<p><img src="p06_files/figure-html/visualize-vaccination-by-politics-2.png" width="672" /></p>
+<p>For both red and blue states, it looks like there’s still heavy
+positive skew in both overall and MMR vaccination rates, suggesting that
+people are generally likely to vaccinate their children regardless of
+political affiliation. However, it also seems like parents in blue
+states are fairly substantially more likely to fully vaccinate their
+kids than parents in red states.</p>
+<p>Just to confirm this intuition, let’s compare red and blue states
+vaccination rates inferentially with t-tests:</p>
+<pre class="r"><code># filter out vaccination values of -1
+measles_politics_filt_overall &lt;- measles_politics %&gt;%
+  filter(overall != -1)
+
+measles_politics_filt_mmr &lt;- measles_politics %&gt;%
+  filter(mmr != -1)
+
+# Overall vaccination
+t.test(overall ~ party_simplified, measles_politics_filt_overall, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  overall by party_simplified
+## t = 19.109, df = 33331, p-value &lt; 2.2e-16
+## alternative hypothesis: true difference in means between group DEMOCRAT and group REPUBLICAN is not equal to 0
+## 95 percent confidence interval:
+##  1.727684 2.122615
+## sample estimates:
+##   mean in group DEMOCRAT mean in group REPUBLICAN 
+##                 93.44583                 91.52068</code></pre>
+<pre class="r"><code># MMR vaccination
+t.test(mmr ~ party_simplified, measles_politics_filt_mmr, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  mmr by party_simplified
+## t = 26.979, df = 13300, p-value &lt; 2.2e-16
+## alternative hypothesis: true difference in means between group DEMOCRAT and group REPUBLICAN is not equal to 0
+## 95 percent confidence interval:
+##  2.674026 3.093029
+## sample estimates:
+##   mean in group DEMOCRAT mean in group REPUBLICAN 
+##                 95.72637                 92.84284</code></pre>
+<p>So again, based on this it seems like even pre-COVID, vaccination
+rates in blue states were higher than those in red states.</p>
+<p>I have some more questions about this data, but this project is
+already going long so I’m going to use my next one to dig into this data
+some more!</p>
+</div>
 
 
 
