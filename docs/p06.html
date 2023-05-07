@@ -13,7 +13,7 @@
 
 <title>Portfolio 6</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,13 +295,72 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
+<p>I found another Tidy Tuesday dataset about measles vaccinations rates
+for schools around the country, and I want to see what patterns jump out
+in the data. Let’s load the data and the packages we’ll need here:</p>
+<pre class="r"><code>library(tidyverse)
+library(tidytuesdayR)
+
+# Get data
+tuesdata &lt;- tidytuesdayR::tt_load(&#39;2020-02-25&#39;)</code></pre>
+<pre><code>## 
+##  Downloading file 1 of 1: `measles.csv`</code></pre>
+<pre class="r"><code>measles &lt;- tuesdata$measles</code></pre>
+<p>First, let’s see what geographic area we’re working with in this
+dataset. Longitude and latitude are included for each school’s entry in
+the data, so we can just plot these against each other:</p>
+<pre class="r"><code>measles %&gt;%
+  ggplot(aes(y = lat, x = lng)) +
+  geom_point()</code></pre>
+<pre><code>## Warning: Removed 1549 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="p06_files/figure-html/location-1.png" width="672" /></p>
+<p>Let’s see if the image makes a little more sense if I filter out
+schools with a longitude greater than zero:</p>
+<pre class="r"><code>measles %&gt;%
+  filter(lng &lt; 0) %&gt;%
+  ggplot(aes(y = lat, x = lng)) +
+  geom_point()</code></pre>
+<p><img src="p06_files/figure-html/location-filtered-1.png" width="672" /></p>
+<p>So we’re missing data grom some states, but it looks. like we’ve got
+a decent portion of the US covered. Just out of curiosity, let’s see
+where the schools we just filtered out are actually located:</p>
+<pre class="r"><code>measles %&gt;%
+  filter(lng &gt; 0)</code></pre>
+<pre><code>## # A tibble: 88 × 16
+##    index state   year    name   type  city  county district enroll   mmr overall
+##    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;lgl&gt;     &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1  1122 Florida 2018-19 Kids … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           53    -1    94.3
+##  2  1959 Florida 2018-19 Rise … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           26    -1    88.5
+##  3  2140 Florida 2018-19 Kids … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           65    -1    80  
+##  4  2159 Florida 2018-19 Flori… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA            9    -1    77.8
+##  5  2165 Florida 2018-19 Flori… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;   NA           38    -1    76.3
+##  6     1 Vermont 2018-19 Addis… &lt;NA&gt;  &lt;NA&gt;  Addis… NA           65   100   100  
+##  7     6 Vermont 2018-19 Burke… &lt;NA&gt;  &lt;NA&gt;  Caled… NA          193   100   100  
+##  8     7 Vermont 2018-19 Canaa… &lt;NA&gt;  &lt;NA&gt;  Essex  NA          167   100    98.8
+##  9    15 Vermont 2018-19 Fairf… &lt;NA&gt;  &lt;NA&gt;  Frank… NA          223   100    97.8
+## 10    25 Vermont 2018-19 Leice… &lt;NA&gt;  &lt;NA&gt;  Addis… NA           57   100    98.2
+## # ℹ 78 more rows
+## # ℹ 5 more variables: xrel &lt;lgl&gt;, xmed &lt;dbl&gt;, xper &lt;dbl&gt;, lat &lt;dbl&gt;, lng &lt;dbl&gt;</code></pre>
+<p>A good first step would be just to make a histogram of vaccination
+rates, both overall and for measles specifically:</p>
+<pre class="r"><code>#Overall vaccination rate
+measles %&gt;%
+  filter(overall != -1) %&gt;%
+  ggplot(aes(x = overall)) + 
+  geom_histogram(binwidth = 5, color = &quot;black&quot;, fill = &quot;blue&quot;)</code></pre>
+<p><img src="p06_files/figure-html/histogram-1.png" width="672" /></p>
+<pre class="r"><code>#Measles vaccination rate
+measles %&gt;%
+  filter(mmr != -1) %&gt;%
+  ggplot(aes(x = mmr)) + 
+  geom_histogram(binwidth = 5, color = &quot;black&quot;, fill = &quot;blue&quot;)</code></pre>
+<p><img src="p06_files/figure-html/histogram-2.png" width="672" /></p>
+<p>So it looks like the distributions of MMR vaccination and overall
+vaccination aren’t shaped very differently (both are pretty
+substantially) positively skewed, but MMR vaccination appears to be more
+common than overall vaccination. This makes sense – the MMR vaccine is
+just one shot, but overall vaccination requires consistently sticking to
+a vaccine schedule.</p>
 
 
 

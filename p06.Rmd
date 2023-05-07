@@ -2,4 +2,55 @@
 title: "Portfolio 6"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+I found another Tidy Tuesday dataset about measles vaccinations rates for schools around the country, and I want to see what patterns jump out in the data. Let's load the data and the packages we'll need here:
+
+```{r setup, message = FALSE}
+library(tidyverse)
+library(tidytuesdayR)
+
+# Get data
+tuesdata <- tidytuesdayR::tt_load('2020-02-25')
+measles <- tuesdata$measles
+```
+
+First, let's see what geographic area we're working with in this dataset. Longitude and latitude are included for each school's entry in the data,  so we can just plot these against each other:
+
+```{r location}
+measles %>%
+  ggplot(aes(y = lat, x = lng)) +
+  geom_point()
+```
+
+Let's see if the image makes a little more sense if I filter out schools with a longitude greater than zero:
+
+```{r location-filtered}
+measles %>%
+  filter(lng < 0) %>%
+  ggplot(aes(y = lat, x = lng)) +
+  geom_point()
+```
+
+So we're missing data grom some states, but it looks. like we've got a decent portion of the US covered. Just out of curiosity,  let's see where the schools we just filtered out are actually located:
+
+```{r filtered-out-locations}
+measles %>%
+  filter(lng > 0)
+```
+
+A good first step would be just to make a histogram of vaccination rates, both overall and for measles specifically:
+
+```{r histogram}
+#Overall vaccination rate
+measles %>%
+  filter(overall != -1) %>%
+  ggplot(aes(x = overall)) + 
+  geom_histogram(binwidth = 5, color = "black", fill = "blue")
+
+#Measles vaccination rate
+measles %>%
+  filter(mmr != -1) %>%
+  ggplot(aes(x = mmr)) + 
+  geom_histogram(binwidth = 5, color = "black", fill = "blue")
+```
+
+So it looks like the distributions of MMR vaccination and overall vaccination aren't shaped very differently (both are pretty substantially) positively skewed, but MMR vaccination appears to be more common than overall vaccination. This makes sense -- the MMR vaccine is just one shot, but overall vaccination requires consistently sticking to a vaccine schedule.
