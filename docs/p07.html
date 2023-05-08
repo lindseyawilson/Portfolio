@@ -13,7 +13,7 @@
 
 <title>Portfolio 7</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -298,13 +295,221 @@ $(document).ready(function () {
 </div>
 
 
-<blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
-</blockquote>
+<p>What I did in my last portfolio was pair some data I found on
+vaccination rates in schools with election data I found that gave each
+state’s general political affiliation. In this portfolio I want to do
+some deeper analysis on that data to see what additional questions we
+can answer.</p>
+<p>Let’s get set up and recreate the data we made last time first:</p>
+<pre class="r"><code># Load packages
+library(tidyverse)
+library(tidytuesdayR)
+library(parsnip)
+
+# Get data
+tuesdata &lt;- tidytuesdayR::tt_load(&#39;2020-02-25&#39;)</code></pre>
+<pre><code>## 
+##  Downloading file 1 of 1: `measles.csv`</code></pre>
+<pre class="r"><code>measles &lt;- tuesdata$measles
+states &lt;- read_csv(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p06/1976-2020-president.csv&quot;)
+
+# Process data to merge vaccination data with election info (see portfolio 6 for details)
+measles_clean &lt;- measles %&gt;%
+  filter(lng &lt; 0)
+
+
+states_2016 &lt;- states %&gt;%
+  filter(year == 2016) %&gt;%
+  filter(candidate == &quot;CLINTON, HILLARY&quot; | candidate == &quot;TRUMP, DONALD J.&quot;)
+
+
+state_max_votes &lt;- states_2016 %&gt;%
+  group_by(state) %&gt;%
+  summarize(max(candidatevotes))
+
+
+names(state_max_votes)[2] &lt;- &quot;maxvotes&quot;
+
+state_winners &lt;- merge(states_2016, state_max_votes, by = &quot;state&quot;)
+
+
+state_winners &lt;- state_winners %&gt;%
+  filter(candidatevotes == maxvotes)
+
+
+state_parties &lt;- state_winners %&gt;%
+  select(state, party_simplified) %&gt;%
+  mutate(state = str_to_title(state))
+
+measles_politics &lt;- merge(measles_clean, state_parties,  by = &quot;state&quot;)</code></pre>
+<div id="mmr-vs.-overall-vaccination" class="section level2">
+<h2>MMR vs. Overall Vaccination</h2>
+<p>The first question I have: how closely are measles vaccination rates
+related to overall vaccination rates. In other words, to what extent
+does giving your child a single vaccination predict your likelihood to
+give your child a full course of vaccinations? Let’s find out:</p>
+<pre class="r"><code># Zero order correlation
+measles_politics_clean &lt;- measles_politics %&gt;%
+  filter(mmr != -1) %&gt;%
+  filter(overall != -1)
+cor(measles_politics_clean$mmr, measles_politics_clean$overall)</code></pre>
+<pre><code>## [1] 0.8986528</code></pre>
+<pre class="r"><code># Linear model predicting overall vaccination rate from MMR vaccination rate
+m_overall_mmr &lt;- linear_reg() %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(overall ~ mmr, data = measles_politics_clean)
+tidy(m_overall_mmr)</code></pre>
+<pre><code>## # A tibble: 2 × 5
+##   term        estimate std.error statistic p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;
+## 1 (Intercept)   -15.6    0.361       -43.3       0
+## 2 mmr             1.14   0.00379     301.        0</code></pre>
+<pre class="r"><code>glance(m_overall_mmr)</code></pre>
+<pre><code>## # A tibble: 1 × 12
+##   r.squared adj.r.squared sigma statistic p.value    df  logLik     AIC     BIC
+##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1     0.808         0.808  4.31    90745.       0     1 -62294. 124593. 124617.
+## # ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+<pre class="r"><code># Visualization
+measles_politics_clean %&gt;%
+  ggplot(aes(x = mmr, y = overall)) +
+  geom_jitter() +
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="p07_files/figure-html/mmr-overall-1.png" width="672" /></p>
+<p>Unsurprisingly, the two variables are very highly correlated, and
+knowing a school’s MMR vaccination rate explains more than 80% of the
+variance in overall vaccination rate. It looks like, as a general rule,
+people are pretty likely to finish a course of vaccines once they
+start.</p>
+</div>
+<div id="predicting-vaccination-rate-from-political-affiliation"
+class="section level2">
+<h2>Predicting Vaccination Rate from Political Affiliation</h2>
+<p>Next, I’m curious as to how predictive a state’s political
+affiliation is of its overall vaccination rate. We. know from portfolio
+6 that there is a. significant difference between red and blue states in
+both MMR and overall vaccination, but how much variance does that
+difference actually explain?</p>
+<p>Let’s find out:</p>
+<pre class="r"><code># Linear model predicting overall vaccination rate from state political affiliation
+m_overall_politics &lt;- linear_reg() %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(overall ~ party_simplified, data = measles_politics_clean)
+tidy(m_overall_politics)</code></pre>
+<pre><code>## # A tibble: 2 × 5
+##   term                       estimate std.error statistic  p.value
+##   &lt;chr&gt;                         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)                   93.2     0.0712    1309.  0       
+## 2 party_simplifiedREPUBLICAN    -4.04    0.194      -20.9 1.07e-95</code></pre>
+<pre class="r"><code>glance(m_overall_politics)</code></pre>
+<pre><code>## # A tibble: 1 × 12
+##   r.squared adj.r.squared sigma statistic  p.value    df  logLik     AIC     BIC
+##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1    0.0197        0.0197  9.74      435. 1.07e-95     1 -79897. 159800. 159824.
+## # ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+<pre class="r"><code>#Visualization
+measles_politics_clean %&gt;%
+  ggplot(aes(x = party_simplified, y = overall, fill = party_simplified)) +
+  geom_violin(alpha = 0.5)+
+  geom_boxplot(width = 0.1, coef = 30, alpha = 0.5) +
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;))</code></pre>
+<p><img src="p07_files/figure-html/vaccination-politics-lm-1.png" width="672" /></p>
+<p>So the difference between red and blue states in vaccination rates is
+significant (i.e., nonrandom), but it isn’t huge and it doesn’t explain
+much variance in overall vaccination. Since overall vaccination and MMR
+vaccination are so tightly correlated, I imagine the pattern won’t look
+extremely different if we look at MMR exclusively, but for the sake of
+completeness I think it’s worth taking a look at:</p>
+<pre class="r"><code># Linear model predicting MMR vaccination rate from state political affiliation
+m_mmr_politics &lt;- linear_reg() %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(mmr ~ party_simplified, data = measles_politics_clean)
+tidy(m_mmr_politics)</code></pre>
+<pre><code>## # A tibble: 2 × 5
+##   term                       estimate std.error statistic   p.value
+##   &lt;chr&gt;                         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)                   95.3     0.0557    1710.  0        
+## 2 party_simplifiedREPUBLICAN    -3.87    0.152      -25.5 3.76e-141</code></pre>
+<pre class="r"><code>glance(m_mmr_politics)</code></pre>
+<pre><code>## # A tibble: 1 × 12
+##   r.squared adj.r.squared sigma statistic   p.value    df  logLik     AIC    BIC
+##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+## 1    0.0292        0.0291  7.62      649. 3.76e-141     1 -74606. 149218. 1.49e5
+## # ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+<pre class="r"><code>#Visualization
+measles_politics_clean %&gt;%
+  ggplot(aes(x = party_simplified, y = mmr, fill = party_simplified)) +
+  geom_violin(alpha = 0.5)+
+  geom_boxplot(width = 0.05, coef = 30, alpha = 0.5) +
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;))</code></pre>
+<p><img src="p07_files/figure-html/MMR-politics-lm-1.png" width="672" />
+It looks like state politics are a bit more predictive of MMR
+vaccination rates than overall vaccination rates, but just like I
+expected the general pattern of data is very similar.</p>
+</div>
+<div
+id="effect-of-politics-on-the-link-between-mmr-and-overall-vaccination"
+class="section level2">
+<h2>Effect of Politics on the Link Between MMR and Overall
+Vaccination</h2>
+<p>Finally, I want to put everything I’ve done so far together and ask:
+does political affiliation moderate the degree which MMR vaccination
+predicts overall vaccination? In other words, are people less likely to
+follow through with the full course of vaccines once they get the MMR
+vaccine in red states than in blue states (or vice versa)? Calculating a
+model with overall vaccination as the outcome variable and with
+political affiliation and MMR rates as predictors should give me an
+interaction term that answers that question:</p>
+<pre class="r"><code># Linear model predicting overall vaccination rate from state political affiliation and MMR rates
+m_overall_mmr_politics &lt;- linear_reg() %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(overall ~ mmr*party_simplified, data = measles_politics_clean)
+tidy(m_overall_mmr_politics)</code></pre>
+<pre><code>## # A tibble: 4 × 5
+##   term                           estimate std.error statistic  p.value
+##   &lt;chr&gt;                             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)                    -17.4      0.433      -40.2  0       
+## 2 mmr                              1.16     0.00453    256.   0       
+## 3 party_simplifiedREPUBLICAN       5.49     0.797        6.89 5.77e-12
+## 4 mmr:party_simplifiedREPUBLICAN  -0.0551   0.00856     -6.44 1.18e-10</code></pre>
+<pre class="r"><code>glance(m_overall_mmr_politics)</code></pre>
+<pre><code>## # A tibble: 1 × 12
+##   r.squared adj.r.squared sigma statistic p.value    df  logLik     AIC     BIC
+##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1     0.808         0.808  4.31    30351.       0     3 -62263. 124536. 124576.
+## # ℹ 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+<pre class="r"><code># Visualization
+measles_politics_clean %&gt;%
+  ggplot(aes(x = mmr, y = overall, color = party_simplified)) +
+  geom_jitter(alpha = 0.1) +
+  geom_smooth(method = &quot;lm&quot;) +
+  scale_color_manual(values = c(&quot;blue&quot;,  &quot;red&quot;))</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<p><img src="p07_files/figure-html/moderation-1.png" width="672" /></p>
+<p>It looks like my hunch was in the right direction. The interaction
+term. we have. here suggests that a one percent increase in MMR
+vaccination rates predicts slightly (but significantly) less of an
+increase in overall vaccination for red states than blue states. In
+other words, people in red states are less likely than those in blue
+states to follow through with a full course of vaccination after the MMR
+shot. However comparing the adjusted R-squared of this model with the
+that of the original model from Part 1, we see that we’re only
+explaining 0.1% more variance after factoring in state politics.</p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>In conclusion, we’ve seen that:</p>
+<ul>
+<li><p>Vaccination rates are generally high</p></li>
+<li><p>Vaccination rates are lower in red states than blue
+states</p></li>
+<li><p>MMR vaccination predicts overall vaccination</p></li>
+<li><p>People are slightly, but non-randomly, more likely to covert MMR
+vaccinations into full vaccination courses in blue states than red
+states</p></li>
+</ul>
+</div>
 
 
 
