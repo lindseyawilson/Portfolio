@@ -13,7 +13,7 @@
 
 <title>Portfolio 8</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -299,12 +296,186 @@ $(document).ready(function () {
 
 
 <blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
+<p>The goal of this project is to figure out if there is anything apart
+from the composition of our test diets that might be influencing the
+amount the rats consume during testing sessions for my thesis. Namely,
+there are two things I’m thinking of that may be factoring in:</p>
+<blockquote>
+<p>1.) Food temperature. Because we only have a limited number of test
+chambers, we have to run the rats in two separate waves. We store the
+food in a refrigerator overnight, but it often makes more sense
+logistically to leave it out while the first group is running in order
+to make the switch off between groups of rats easier/faster. This also,
+however, allows the food to warm up to room temperature during the time
+the that the first group of rats is running, which might cause the food
+to taste differently for the second group.</p>
 </blockquote>
+<blockquote>
+<p>2.) Water consumption. Rats may eat more (or less) food during
+sessions in which they drink more water, perhaps because hydration
+status influences flavor preferences or motivation to eat</p>
+</blockquote>
+<p>Lucky for us, we can test both of these ideas with the data we’ve
+already collected. Let’s start by loading what we need:</p>
+</blockquote>
+<pre class="r"><code># Packages
+library(tidyverse)
+library(readxl)
+
+# Data
+day_one &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 1,
+                      col_names = TRUE)
+day_two &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 2,
+                      col_names = TRUE)
+day_three &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 3,
+                      col_names = TRUE)
+day_four &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 4,
+                      col_names = TRUE)
+day_five &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 5,
+                      col_names = TRUE)
+day_six &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 6,
+                      col_names = TRUE)
+day_seven &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 7,
+                      col_names = TRUE)</code></pre>
+<div id="temperature" class="section level2">
+<h2>Temperature</h2>
+<blockquote>
+<p>Now that we have our data, we need to process it. We’ve done some of
+that before, in portfolio 3. Let’s add that code below:</p>
+</blockquote>
+<pre class="r"><code>#rename columns to something workable
+columns &lt;- c(&#39;rat&#39;, &#39;zero&#39;, &#39;twenty&#39;, &#39;forty&#39;, &#39;sixty&#39;, &#39;eighty&#39;, &#39;hundred&#39;, &#39;water&#39;)
+
+colnames(day_one) &lt;- columns
+colnames(day_two) &lt;- columns
+colnames(day_three) &lt;- columns
+colnames(day_four) &lt;- columns
+colnames(day_five) &lt;- columns
+colnames(day_six) &lt;- columns
+colnames(day_seven) &lt;- columns
+
+##average the datasets together
+
+#convert dataframes to matrices
+
+m1 &lt;- data.matrix(day_one)
+m2 &lt;- data.matrix(day_two)
+m3 &lt;- data.matrix(day_three)
+m4 &lt;- data.matrix(day_four)
+m5 &lt;- data.matrix(day_five)
+m6 &lt;- data.matrix(day_six)
+m7 &lt;- data.matrix(day_seven)
+
+#average those matrices together and turn the result back into a data frame
+
+m_avg &lt;- (m1 + m2 + m3 + m4 + m5 + m6 + m7)/7
+avg &lt;- as.data.frame(m_avg)
+
+
+## mutliply each column by the appropriate value
+avg_kcal &lt;- avg
+avg_kcal$zero &lt;- avg_kcal$zero*9
+avg_kcal$twenty &lt;- avg_kcal$twenty*8
+avg_kcal$forty &lt;- avg_kcal$forty*7
+avg_kcal$sixty &lt;- avg_kcal$sixty*6
+avg_kcal$eighty &lt;- avg_kcal$eighty*5
+avg_kcal$hundred &lt;- avg_kcal$hundred*4
+
+#something weird happens with the rat column during the matrix conversion
+#to fix this, I&#39;m just going to manually assign values for that column
+
+rat_names &lt;- c(&quot;IC1&quot;, &quot;IC2&quot;, &quot;IC3&quot;, &quot;IC4&quot;, &quot;IC5&quot;, &quot;IC6&quot;, &quot;IC7&quot;, &quot;IC8&quot;, &quot;IC9&quot;, &quot;IC10&quot;, &quot;IC11&quot;, &quot;IC12&quot;)
+
+avg_kcal &lt;- avg_kcal %&gt;%
+  mutate(real_rat_name = rat_names) %&gt;%
+  select(zero:real_rat_name)</code></pre>
+<blockquote>
+<p>This leaves us with a data frame containing the average values each
+rat ate of each diet across the seven days of testing.</p>
+</blockquote>
+<blockquote>
+<p>In order to test my idea about temperature, I need to divide the rats
+up into two groups, with rats IC1-IC6 in the first group(because they
+ran first) and rats IC7-IC12 in the second (because they ran
+second):</p>
+</blockquote>
+<pre class="r"><code>#Creates an index column I can use in the next step
+index &lt;- c(1:12)
+avg_kcal &lt;- avg_kcal %&gt;%
+  mutate(index = index)
+
+#Divides rats into two groups based on index
+avg_kcal &lt;- avg_kcal %&gt;%
+  mutate(group = case_when(index &lt;= 6 ~ 1,
+                           index &gt;= 7 ~ 2))</code></pre>
+<blockquote>
+<p>Now let’s add across the rows to calculate average total kilocalories
+per session:</p>
+</blockquote>
+<pre class="r"><code>avg_kcal &lt;- avg_kcal %&gt;%
+  mutate(total = zero + twenty + forty + sixty + eighty + hundred)</code></pre>
+<blockquote>
+<p>And the last thing we need to do is reformat:</p>
+</blockquote>
+<pre class="r"><code>avg_kcal_long &lt;- avg_kcal %&gt;%
+  pivot_longer(cols = -c(real_rat_name, index, group),
+               names_to = &quot;diet&quot;,
+               values_to = &quot;kcals&quot;) %&gt;%
+  select(real_rat_name, group, diet, kcals)</code></pre>
+<blockquote>
+<p>And now we have what we need! Before anything else, let’s visualize
+the difference in average total calories consumed between the two
+groups:</p>
+</blockquote>
+<pre class="r"><code>#calculate group means
+group_means &lt;- avg_kcal_long %&gt;%
+  filter(diet == &quot;total&quot;) %&gt;%
+  group_by(group) %&gt;%
+  summarize(mean(kcals))
+colnames(group_means)[2] &lt;- &quot;kcals&quot;
+
+group_means %&gt;%
+  ggplot(aes(x = group, y = kcals, fill = as.factor(group))) +
+  geom_bar(stat = &quot;identity&quot;, alpha = 0.5) +
+  geom_point(data = filter(avg_kcal_long, diet == &quot;total&quot;), stat = &quot;identity&quot;) +
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;))</code></pre>
+<p><img src="p08_files/figure-html/group-viz-1.png" width="672" /></p>
+<blockquote>
+<p>So just based on the visual, it looks like we do have a descriptive
+difference between the groups, with the rats in group two eating more
+than those in group 1. Let’s test this difference for significance:</p>
+</blockquote>
+<pre class="r"><code>avg_totals &lt;- avg_kcal %&gt;%
+  select(real_rat_name, group, total)
+
+t.test(total ~ group, avg_totals, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  total by group
+## t = -2.3469, df = 9.1804, p-value = 0.043
+## alternative hypothesis: true difference in means between group 1 and group 2 is not equal to 0
+## 95 percent confidence interval:
+##  -22.327657  -0.443772
+## sample estimates:
+## mean in group 1 mean in group 2 
+##        33.59167        44.97738</code></pre>
+<blockquote>
+<p>And our difference is significant. It looks like the rats prefer
+their food a little bit warmer (or something else about the second
+session) after all. It may also be that rats in the second group are
+heavier and therefore eat more as well, but without data on their
+weights I can easily put my hands on right now (downside of keeping
+paper records), I’m not able to test that idea.</p>
+</blockquote>
+</div>
 
 
 
