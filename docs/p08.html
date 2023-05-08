@@ -321,6 +321,7 @@ already collected. Let’s start by loading what we need:</p>
 <pre class="r"><code># Packages
 library(tidyverse)
 library(readxl)
+library(parsnip)
 
 # Data
 day_one &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
@@ -473,7 +474,111 @@ their food a little bit warmer (or something else about the second
 session) after all. It may also be that rats in the second group are
 heavier and therefore eat more as well, but without data on their
 weights I can easily put my hands on right now (downside of keeping
-paper records), I’m not able to test that idea.</p>
+paper records), I’m not able to test that idea here.</p>
+</blockquote>
+</div>
+<div id="water" class="section level2">
+<h2>Water</h2>
+<blockquote>
+<p>Next I want to see if water intake was related to average consumption
+at all. That should be easy enough to do here!</p>
+</blockquote>
+<blockquote>
+<p>I want to take advantage of the fact that we have multiple days worth
+of data and plot each day as a data point rather than just use averages.
+That means we’ll have. to do a bit more data wrangling, but it should be
+straightforward enough.</p>
+</blockquote>
+<blockquote>
+<p>First, let’s add a variable to the data frame for each day that just
+gives the day number:</p>
+</blockquote>
+<pre class="r"><code>day_one &lt;- day_one %&gt;%
+  mutate(day = 1)
+day_two &lt;- day_two %&gt;%
+  mutate(day = 2)
+day_three &lt;- day_three %&gt;%
+  mutate(day = 3)
+day_four &lt;- day_four %&gt;%
+  mutate(day = 4)
+day_five &lt;- day_five %&gt;%
+  mutate(day = 5)
+day_six &lt;- day_six %&gt;%
+  mutate(day = 6)
+day_seven &lt;- day_seven %&gt;%
+  mutate(day = 7)</code></pre>
+<blockquote>
+<p>Now let’s concatenate the data frames:</p>
+</blockquote>
+<pre class="r"><code>days &lt;- list(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
+all_days &lt;- do.call(&quot;rbind&quot;, days)
+
+all_days_kcal &lt;- all_days
+all_days_kcal$zero &lt;- all_days_kcal$zero*9
+all_days_kcal$twenty &lt;- all_days_kcal$twenty*8
+all_days_kcal$forty &lt;- all_days_kcal$forty*7
+all_days_kcal$sixty &lt;- all_days_kcal$sixty*6
+all_days_kcal$eighty &lt;- all_days_kcal$eighty*5
+all_days_kcal$hundred &lt;- all_days_kcal$hundred*4</code></pre>
+<blockquote>
+<p>Again lets add across the rows, group our rats, and select the
+columns we need</p>
+</blockquote>
+<pre class="r"><code>all_days_kcal_post &lt;- all_days_kcal %&gt;%
+  mutate(total = zero + twenty + forty + sixty + eighty + hundred) %&gt;%
+  mutate(group = case_when(rat == &quot;IC1&quot;~1,
+                           rat == &quot;IC2&quot;~1,
+                           rat == &quot;IC3&quot;~1,
+                           rat == &quot;IC4&quot;~1,
+                           rat ==&quot;IC5&quot;~1,
+                           rat == &quot;IC6&quot;~1,
+                           rat == &quot;IC7&quot;~2,
+                           rat == &quot;IC8&quot;~2,
+                           rat == &quot;IC9&quot;~2,
+                           rat == &quot;IC10&quot;~2,
+                           rat == &quot;IC11&quot;~2,
+                           rat == &quot;IC12&quot;~2)) %&gt;%
+  select(rat, group, day, water, total)</code></pre>
+<blockquote>
+<p>And with things properly formatted, we can see how water and total
+calorie intake are related:</p>
+</blockquote>
+<pre class="r"><code>cor(all_days_kcal_post$total, all_days_kcal_post$water, use = &quot;complete.obs&quot;)</code></pre>
+<pre><code>## [1] -0.04586677</code></pre>
+<pre class="r"><code>m_calorie_water &lt;- linear_reg() %&gt;%
+  set_engine(&quot;lm&quot;) %&gt;%
+  fit(total ~ water, data = all_days_kcal_post)
+tidy(m_calorie_water)</code></pre>
+<pre><code>## # A tibble: 2 × 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)    40.0       2.19    18.3   1.82e-30
+## 2 water          -1.94      4.69    -0.413 6.81e- 1</code></pre>
+<pre class="r"><code>all_days_kcal_post %&gt;%
+  ggplot(aes(x = water, y = total)) +
+  geom_jitter() +
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
+<pre><code>## Warning: Removed 1 rows containing non-finite values (`stat_smooth()`).</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="p08_files/figure-html/water-calorie-lm-1.png" width="672" /></p>
+<blockquote>
+<p>This gives us pretty convincing evidence that water and calorie
+intake aren’t meaningfully related. The correlation between the two is
+fairly low, and when we use water intake to predict calorie intake the
+slope is non-significant.</p>
+</blockquote>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<blockquote>
+<ul>
+<li><p>The first group of rats to go into the test chambers each day ate
+significantly less during my first thesis experiment than the second
+group</p></li>
+<li><p>Water intake is not meaningfully related to calorie
+intake</p></li>
+</ul>
 </blockquote>
 </div>
 
