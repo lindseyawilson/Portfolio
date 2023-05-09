@@ -1,5 +1,105 @@
 ---
 title: "Portfolio 9"
 ---
+> I want to use this portfolio to play around with some methods of visualizing the thesis data I've collected so far. I've already visualized some of it in previous projects, but I figure it will come in handy later to have taken some dedicated time to think about how to present my data graphically
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+
+> Let's get everything loaded and prepped:
+
+```{r setup}
+library(tidyverse)
+library(readxl)
+```
+
+```{r load-data}
+day_one <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 10,
+                      col_names = TRUE)
+day_two <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 11,
+                      col_names = TRUE)
+day_three <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 12,
+                      col_names = TRUE)
+day_four <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 13,
+                      col_names = TRUE)
+day_five <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 14,
+                      col_names = TRUE)
+day_six <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 15,
+                      col_names = TRUE)
+day_seven <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 16,
+                      col_names = TRUE)
+avg_kcal <- day_seven <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 9,
+                      col_names = TRUE)
+
+columns <- c('rat', 'zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred', 'water')
+colnames(day_one) <- columns
+colnames(day_two) <- columns
+colnames(day_three) <- columns
+colnames(day_four) <- columns
+colnames(day_five) <- columns
+colnames(day_six) <- columns
+colnames(day_seven) <- columns
+colnames(avg_kcal) <- columns
+```
+
+```{r concatenation-and-kcal-conversion}
+day_one <- day_one %>%
+  mutate(day = 1)
+day_two <- day_two %>%
+  mutate(day = 2)
+day_three <- day_three %>%
+  mutate(day = 3)
+day_four <- day_four %>%
+  mutate(day = 4)
+day_five <- day_five %>%
+  mutate(day = 5)
+day_six <- day_six %>%
+  mutate(day = 6)
+day_seven <- day_seven %>%
+  mutate(day = 7)
+
+days <- list(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
+
+all_days <- do.call("rbind", days)
+
+all_days_kcal <- all_days
+all_days_kcal$zero <- all_days_kcal$zero*9
+all_days_kcal$twenty <- all_days_kcal$twenty*8
+all_days_kcal$forty <- all_days_kcal$forty*7
+all_days_kcal$sixty <- all_days_kcal$sixty*6
+all_days_kcal$eighty <- all_days_kcal$eighty*5
+all_days_kcal$hundred <- all_days_kcal$hundred*4
+```
+
+> And with that out of the way we can get started!
+
+## Change Over Time
+
+> One of the arguments I'm making for the length of time we chose to train the animals is that it would hopefully result in stable food preferences by the time we got to testing.  Let's see if that's true:
+
+```{r change-over-time}
+# Reformat data frames for ggplot
+all_days_kcal_long <- all_days_kcal %>%
+  pivot_longer(cols = -c(rat, day),
+               names_to = "diet",
+               values_to = "kcals")
+
+avg_kcal_long <- avg_kcal %>%
+  pivot_longer(cols = -c(rat),
+               names_to = "diet",
+               values_to = "kcals")
+
+# Average intake over time
+all_days_kcal_long %>%
+  filter(rat == "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = day, y = kcals, color = diet)) +
+  geom_line()
+    
+```

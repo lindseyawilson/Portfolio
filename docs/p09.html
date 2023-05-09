@@ -13,7 +13,7 @@
 
 <title>Portfolio 9</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -299,12 +296,114 @@ $(document).ready(function () {
 
 
 <blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
+<p>I want to use this portfolio to play around with some methods of
+visualizing the thesis data I’ve collected so far. I’ve already
+visualized some of it in previous projects, but I figure it will come in
+handy later to have taken some dedicated time to think about how to
+present my data graphically</p>
 </blockquote>
+<blockquote>
+<p>Let’s get everything loaded and prepped:</p>
+</blockquote>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.4.0     ✔ purrr   1.0.1
+## ✔ tibble  3.2.1     ✔ dplyr   1.1.2
+## ✔ tidyr   1.3.0     ✔ stringr 1.5.0
+## ✔ readr   2.1.3     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(readxl)</code></pre>
+<pre class="r"><code>day_one &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 10,
+                      col_names = TRUE)
+day_two &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 11,
+                      col_names = TRUE)
+day_three &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 12,
+                      col_names = TRUE)
+day_four &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 13,
+                      col_names = TRUE)
+day_five &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 14,
+                      col_names = TRUE)
+day_six &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 15,
+                      col_names = TRUE)
+day_seven &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 16,
+                      col_names = TRUE)
+avg_kcal &lt;- day_seven &lt;- read_excel(&quot;/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx&quot;,
+                      sheet = 9,
+                      col_names = TRUE)
+
+columns &lt;- c(&#39;rat&#39;, &#39;zero&#39;, &#39;twenty&#39;, &#39;forty&#39;, &#39;sixty&#39;, &#39;eighty&#39;, &#39;hundred&#39;, &#39;water&#39;)
+colnames(day_one) &lt;- columns
+colnames(day_two) &lt;- columns
+colnames(day_three) &lt;- columns
+colnames(day_four) &lt;- columns
+colnames(day_five) &lt;- columns
+colnames(day_six) &lt;- columns
+colnames(day_seven) &lt;- columns
+colnames(avg_kcal) &lt;- columns</code></pre>
+<pre class="r"><code>day_one &lt;- day_one %&gt;%
+  mutate(day = 1)
+day_two &lt;- day_two %&gt;%
+  mutate(day = 2)
+day_three &lt;- day_three %&gt;%
+  mutate(day = 3)
+day_four &lt;- day_four %&gt;%
+  mutate(day = 4)
+day_five &lt;- day_five %&gt;%
+  mutate(day = 5)
+day_six &lt;- day_six %&gt;%
+  mutate(day = 6)
+day_seven &lt;- day_seven %&gt;%
+  mutate(day = 7)
+
+days &lt;- list(day_one, day_two, day_three, day_four, day_five, day_six, day_seven)
+
+all_days &lt;- do.call(&quot;rbind&quot;, days)
+
+all_days_kcal &lt;- all_days
+all_days_kcal$zero &lt;- all_days_kcal$zero*9
+all_days_kcal$twenty &lt;- all_days_kcal$twenty*8
+all_days_kcal$forty &lt;- all_days_kcal$forty*7
+all_days_kcal$sixty &lt;- all_days_kcal$sixty*6
+all_days_kcal$eighty &lt;- all_days_kcal$eighty*5
+all_days_kcal$hundred &lt;- all_days_kcal$hundred*4</code></pre>
+<blockquote>
+<p>And with that out of the way we can get started!</p>
+</blockquote>
+<div id="change-over-time" class="section level2">
+<h2>Change Over Time</h2>
+<blockquote>
+<p>One of the arguments I’m making for the length of time we chose to
+train the animals is that it would hopefully result in stable food
+preferences by the time we got to testing. Let’s see if that’s true:</p>
+</blockquote>
+<pre class="r"><code># Reformat data frames for ggplot
+all_days_kcal_long &lt;- all_days_kcal %&gt;%
+  pivot_longer(cols = -c(rat, day),
+               names_to = &quot;diet&quot;,
+               values_to = &quot;kcals&quot;)
+
+avg_kcal_long &lt;- avg_kcal %&gt;%
+  pivot_longer(cols = -c(rat),
+               names_to = &quot;diet&quot;,
+               values_to = &quot;kcals&quot;)
+
+# Average intake over time
+all_days_kcal_long %&gt;%
+  filter(rat == &quot;Avg&quot;) %&gt;%
+  filter(diet != &quot;water&quot;) %&gt;%
+  ggplot(aes(x = day, y = kcals, color = diet)) +
+  geom_line()</code></pre>
+<p><img src="p09_files/figure-html/change-over-time-1.png" width="672" /></p>
+</div>
 
 
 

@@ -227,7 +227,7 @@ tidy(m_calorie_water)
 all_days_kcal_post %>%
   ggplot(aes(x = water, y = total)) +
   geom_jitter() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") 
 ```
 
 > This gives us pretty convincing evidence that water and calorie intake aren't meaningfully related. The correlation between the two is fairly low, and when we use water intake to predict calorie intake the slope is non-significant.

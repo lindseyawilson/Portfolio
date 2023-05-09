@@ -461,13 +461,13 @@ t.test(total ~ group, avg_totals, alternative = &quot;two.sided&quot;)</code></p
 ##  Welch Two Sample t-test
 ## 
 ## data:  total by group
-## t = -2.3469, df = 9.1804, p-value = 0.043
+## t = -2.3258, df = 9.2823, p-value = 0.04423
 ## alternative hypothesis: true difference in means between group 1 and group 2 is not equal to 0
 ## 95 percent confidence interval:
-##  -22.327657  -0.443772
+##  -22.2164094  -0.3597811
 ## sample estimates:
 ## mean in group 1 mean in group 2 
-##        33.59167        44.97738</code></pre>
+##        33.76738        45.05548</code></pre>
 <blockquote>
 <p>And our difference is significant. It looks like the rats prefer
 their food a little bit warmer (or something else about the second
@@ -544,7 +544,7 @@ columns we need</p>
 calorie intake are related:</p>
 </blockquote>
 <pre class="r"><code>cor(all_days_kcal_post$total, all_days_kcal_post$water, use = &quot;complete.obs&quot;)</code></pre>
-<pre><code>## [1] -0.04586677</code></pre>
+<pre><code>## [1] -0.04666586</code></pre>
 <pre class="r"><code>m_calorie_water &lt;- linear_reg() %&gt;%
   set_engine(&quot;lm&quot;) %&gt;%
   fit(total ~ water, data = all_days_kcal_post)
@@ -552,12 +552,12 @@ tidy(m_calorie_water)</code></pre>
 <pre><code>## # A tibble: 2 × 5
 ##   term        estimate std.error statistic  p.value
 ##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-## 1 (Intercept)    40.0       2.19    18.3   1.82e-30
-## 2 water          -1.94      4.69    -0.413 6.81e- 1</code></pre>
+## 1 (Intercept)    40.2       2.18    18.4   1.24e-30
+## 2 water          -1.97      4.68    -0.420 6.75e- 1</code></pre>
 <pre class="r"><code>all_days_kcal_post %&gt;%
   ggplot(aes(x = water, y = total)) +
   geom_jitter() +
-  geom_smooth(method = &quot;lm&quot;)</code></pre>
+  geom_smooth(method = &quot;lm&quot;) </code></pre>
 <pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
 <pre><code>## Warning: Removed 1 rows containing non-finite values (`stat_smooth()`).</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (`geom_point()`).</code></pre>

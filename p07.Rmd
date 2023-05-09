@@ -136,7 +136,7 @@ measles_politics_clean %>%
   scale_color_manual(values = c("blue",  "red"))
 ```
 
-It looks like my hunch was in the right direction. The interaction term. we have. here suggests that a one percent increase in MMR vaccination rates predicts slightly (but significantly) less of an increase in overall vaccination for red states than blue states.  In other words, people in red states are less likely than those in blue states to follow through with a full course of vaccination after the MMR shot. However comparing the adjusted R-squared of this model with the that of the original model from Part 1, we see that we're only explaining 0.1% more variance after factoring in state politics.
+It looks like my hunch was in the right direction. The interaction term we have here suggests that a one percent increase in MMR vaccination rates predicts slightly (but significantly) less of an increase in overall vaccination for red states than blue states.  In other words, people in red states are less likely than those in blue states to follow through with a full course of vaccination after the MMR shot. However comparing the adjusted R-squared of this model with the that of the original model from Part 1, we see that we're only explaining 0.1% more variance after factoring in state politics.
 
 ## Conclusions
 
