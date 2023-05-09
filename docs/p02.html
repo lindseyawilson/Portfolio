@@ -339,10 +339,10 @@ HI) along with a control dose of saline vehicle (LO)</p>
 started. First, let’s load the packages and data we’ll need:</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.4.0      ✔ purrr   1.0.1 
-## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-## ✔ tidyr   1.3.0      ✔ stringr 1.5.0 
-## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+## ✔ ggplot2 3.4.0     ✔ purrr   1.0.1
+## ✔ tibble  3.2.1     ✔ dplyr   1.1.2
+## ✔ tidyr   1.3.0     ✔ stringr 1.5.0
+## ✔ readr   2.1.3     ✔ forcats 0.5.2
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -417,13 +417,17 @@ presses:</p>
 ## 1   dose   2  16 0.655 0.533       0.021</code></pre>
 <p>So overall it looks like there wasn’t a significant effect of drug
 dose on active lever presses. Adding a visualization might help us to
-get a better idea of what’s going on:</p>
+get a better idea of what’s going on. Note that I’m intentionally using
+a plainer aesthetic for this project, since these will probably go right
+into the paper itself:</p>
 <pre class="r"><code>active_long %&gt;%
   ggbarplot(x = &quot;dose&quot;,
             y = &quot;value&quot;,
             add = c(&quot;mean_se&quot;),
             fill = &quot;darkgrey&quot;,
-            ylab = &quot;Active Lever Presses&quot;)</code></pre>
+            ylab = &quot;Active Lever Presses&quot;,
+            xlab = &quot;Dosage&quot;,
+            title = &quot;Active Lever&quot;)</code></pre>
 <p><img src="p02_files/figure-html/active-viz-1.png" width="672" /></p>
 <p>As we can see, there’s some pretty significant overlap in the error
 bars, which here represent standard errors.</p>
@@ -435,14 +439,18 @@ those two dependent variables as well:</p>
             y = &quot;value&quot;,
             add = c(&quot;mean_se&quot;),
             fill = &quot;darkgrey&quot;,
-            ylab = &quot;Reinforcers&quot;)</code></pre>
+            ylab = &quot;Reinforcers Earned&quot;,
+            xlab = &quot;Dosage&quot;,
+            title = &quot;Reinforcers&quot;)</code></pre>
 <p><img src="p02_files/figure-html/breakpoint-reinforcer-viz-1.png" width="672" /></p>
 <pre class="r"><code>breakpoint_long %&gt;%
   ggbarplot(x = &quot;dose&quot;,
             y = &quot;value&quot;,
             add = c(&quot;mean_se&quot;),
             fill = &quot;darkgrey&quot;,
-            ylab = &quot;Breakpoint&quot;)</code></pre>
+            ylab = &quot;Breakpoint&quot;,
+            xlab = &quot;Dosage&quot;,
+            title = &quot;Breakpoint&quot;)</code></pre>
 <p><img src="p02_files/figure-html/breakpoint-reinforcer-viz-2.png" width="672" /></p>
 <p>And these results aren’t significant either:</p>
 <pre class="r"><code>get_anova_table(reinforcers_results)</code></pre>
@@ -482,7 +490,9 @@ data clears things up:</p>
             y = &quot;value&quot;,
             add = c(&quot;mean_se&quot;),
             fill = &quot;darkgrey&quot;,
-            ylab = &quot;Inactive Lever Presses&quot;)</code></pre>
+            ylab = &quot;Inactive Lever Presses&quot;,
+            xlab = &quot;Dosage&quot;,
+            title = &quot;Inactive Lever&quot;)</code></pre>
 <p><img src="p02_files/figure-html/inactive-viz-1.png" width="672" /></p>
 <p>Based on this, if I had to guess I’d probably say the comparison
 between the LO and HI groups is what the ANOVA picked up on. In any case

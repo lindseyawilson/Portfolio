@@ -91,7 +91,7 @@ And just like that, we have our calculations out of the way! Let's take a look a
 get_anova_table(active_results)
 ```
 
-So overall it looks like there wasn't a significant effect of drug dose on active lever presses. Adding a visualization might help us to get a better idea of what's going on:
+So overall it looks like there wasn't a significant effect of drug dose on active lever presses. Adding a visualization might help us to get a better idea of what's going on. Note that I'm intentionally using a plainer aesthetic for this project, since these will probably go right into the paper itself:
 
 ```{r active-viz}
 active_long %>%
@@ -99,7 +99,9 @@ active_long %>%
             y = "value",
             add = c("mean_se"),
             fill = "darkgrey",
-            ylab = "Active Lever Presses")
+            ylab = "Active Lever Presses",
+            xlab = "Dosage",
+            title = "Active Lever")
 ```
 
 As we can see, there's some pretty significant overlap in the error bars, which here represent standard errors.
@@ -112,7 +114,9 @@ reinforcers_long %>%
             y = "value",
             add = c("mean_se"),
             fill = "darkgrey",
-            ylab = "Reinforcers")
+            ylab = "Reinforcers Earned",
+            xlab = "Dosage",
+            title = "Reinforcers")
 
 
 breakpoint_long %>%
@@ -120,7 +124,9 @@ breakpoint_long %>%
             y = "value",
             add = c("mean_se"),
             fill = "darkgrey",
-            ylab = "Breakpoint")
+            ylab = "Breakpoint",
+            xlab = "Dosage",
+            title = "Breakpoint")
 
 ```
 
@@ -147,7 +153,9 @@ inactive_long %>%
             y = "value",
             add = c("mean_se"),
             fill = "darkgrey",
-            ylab = "Inactive Lever Presses")
+            ylab = "Inactive Lever Presses",
+            xlab = "Dosage",
+            title = "Inactive Lever")
 ```
 
 Based on this, if I had to guess I'd probably say the comparison between the LO and HI groups is what the ANOVA picked up on. In any case this is definitely our least important result -- interesting to see, but that's basically all.
