@@ -131,6 +131,9 @@ And now we're ready for visualization! I'm thinking a bar graph with `diet` on t
 avg_kcal_long %>%
 ggbarplot(x = "diet",
           y = "kcals",
+          title = "Diet Preferences for Each Individual Rat",
+          color = "diet",
+          fill = "diet",
           facet.by = "real_rat_name",
           font.xtickslab = 5)
 ```

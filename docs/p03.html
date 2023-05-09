@@ -440,6 +440,9 @@ variable.</p>
 <pre class="r"><code>avg_kcal_long %&gt;%
 ggbarplot(x = &quot;diet&quot;,
           y = &quot;kcals&quot;,
+          title = &quot;Diet Preferences for Each Individual Rat&quot;,
+          color = &quot;diet&quot;,
+          fill = &quot;diet&quot;,
           facet.by = &quot;real_rat_name&quot;,
           font.xtickslab = 5)</code></pre>
 <p><img src="p03_files/figure-html/kcal-bar-graphs-1.png" width="672" /></p>
