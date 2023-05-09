@@ -13,7 +13,7 @@
 
 <title>Portfolio 10</title>
 
-<script src="site_libs/header-attrs-2.13/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -141,11 +141,15 @@ $(document).ready(function () {
     href = "index.html";
   var menuAnchor = $('a[href="' + href + '"]');
 
-  // mark it active
-  menuAnchor.tab('show');
-
-  // if it's got a parent navbar menu mark it active as well
-  menuAnchor.closest('li.dropdown').addClass('active');
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
 
   // Navbar adjustments
   var navHeight = $(".navbar").first().height() + 15;
@@ -174,8 +178,8 @@ $(document).ready(function () {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -183,16 +187,9 @@ $(document).ready(function () {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "&#xe258;";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -299,103 +296,120 @@ $(document).ready(function () {
 
 
 <blockquote>
-<p>The projects should be numbered consecutively (i.e., in the order in
-which you began them), and should include for each project a description
-of the goal, the product (computer program, hand graph, computer graph,
-etc.), the data, and some interpretation. Reports must be reproducible
-and of high quality in terms of writing, grammar, presentation, etc.</p>
+<p>A few months ago, we spent some time in class talking about numbats,
+a very interesting looking marsupial species that is native to Australia
+and currently considered to be endangered. Today, I’m going to answer
+some questions about them by analyzing a dataset containing information
+on numbbat sightings.</p>
 </blockquote>
-<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-hendrerit purus ut dapibus vestibulum. Suspendisse potenti. Cras
-faucibus mauris in leo condimentum lobortis. Cras euismod sollicitudin
-augue, ut venenatis quam placerat eu. Maecenas vulputate rhoncus odio,
-in interdum risus malesuada gravida. Maecenas cursus sed dui sit amet
-lacinia. Nunc dignissim metus nec ex mattis, non rutrum urna cursus.
-Morbi pretium elementum purus, in aliquet libero eleifend ac. Nam
-finibus, ligula sed ultrices pharetra, tellus risus consequat tortor,
-facilisis maximus elit lectus a metus. Sed vel dictum nulla, vitae
-blandit turpis. Integer pulvinar tempor diam ac venenatis. Vestibulum
-est lacus, suscipit et ipsum nec, consectetur iaculis leo. Morbi libero
-lacus, scelerisque non sollicitudin vitae, accumsan sed tellus.
-Suspendisse quis orci tellus.</p>
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting
-syntax for authoring HTML, PDF, and MS Word documents. For more details
-on using R Markdown see <a href="http://rmarkdown.rstudio.com"
-class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be
-generated that includes both content as well as the output of any
-embedded R code chunks within the document. You can embed an R code
-chunk like this:</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
-<p>Maecenas luctus convallis efficitur. Vestibulum pharetra laoreet nibh
-non congue. Etiam ornare, neque sit amet condimentum aliquet, odio ipsum
-porttitor elit, eu malesuada turpis augue sit amet arcu. Integer nec
-quam et massa congue tincidunt. Donec sit amet diam placerat, pharetra
-quam nec, ornare nisl. Quisque erat turpis, imperdiet eget tellus non,
-interdum ultricies nisi. Fusce a erat est. Nunc sollicitudin ante non
-eros vulputate, sed eleifend nulla hendrerit. Nam ac quam nulla.
-Praesent a ligula a justo auctor tristique ac vel neque. Class aptent
-taciti sociosqu ad litora torquent per conubia nostra, per inceptos
-himenaeos. Quisque tempor felis sed lorem efficitur volutpat. Aliquam
-lectus diam, lacinia vitae velit eget, pulvinar porta massa. Curabitur
-nec egestas mi.</p>
+<blockquote>
+<p>The Tidy Tuesday data I’ll be working with is linked here: <a
+href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-03-07/readme.md"
+class="uri">https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-03-07/readme.md</a></p>
+</blockquote>
+<pre class="r"><code>library(tidyverse)
+
+tuesdata &lt;- tidytuesdayR::tt_load(2023, week = 10)</code></pre>
+<pre><code>## 
+##  Downloading file 1 of 1: `numbats.csv`</code></pre>
+<pre class="r"><code>numbats &lt;- tuesdata$numbats</code></pre>
+<blockquote>
+<p>The data actually comes with some questions that I’m going to try to
+answer. No guarantee I’ll get all of them, but it’ll be fun to try.</p>
+</blockquote>
+<div id="where-do-you-find-numbats-in-australia" class="section level2">
+<h2>Where do you find numbats in Australia?</h2>
+<blockquote>
+<p>The data include longitude and latitude info, so we can just plot
+those against each other to see where numbats have been sighted in
+Australia:</p>
+</blockquote>
+<pre class="r"><code>numbats %&gt;%
+  ggplot(aes(x = decimalLongitude, y = decimalLatitude)) +
+  geom_point(color = &quot;orange&quot;)</code></pre>
+<pre><code>## Warning: Removed 83 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="p10_files/figure-html/location-1.png" width="672" /></p>
+<blockquote>
+<p>This by itself isn’t incredibly intuitive, but I can’t seem to get
+the points to cleanly superimpose over a map of Australia. I’ve checked
+though, and the sightings do span the entirety of the country.</p>
+</blockquote>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="p10_files/figure-html/pressure-1.png" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the
-code chunk to prevent printing of the R code that generated the
-plot.</p>
-<p>Morbi tincidunt mollis odio sit amet feugiat. Ut vel risus eu ante
-dictum consequat. Integer et luctus mauris. Donec nec faucibus urna, sed
-commodo risus. Nam elementum pulvinar erat, eget convallis est blandit
-vel. Etiam gravida sapien eu massa hendrerit maximus. Proin dolor quam,
-porta vitae libero non, venenatis porta tellus. Vivamus et elit a est
-aliquet consequat. Proin tempus, purus quis suscipit placerat, dui nunc
-euismod dui, sit amet luctus leo lectus in risus. Phasellus consectetur
-eleifend arcu. Nullam venenatis blandit nulla ut ullamcorper. Vestibulum
-eu arcu quis massa scelerisque sodales in ac augue. Quisque dapibus
-fringilla turpis, ut cursus tortor cursus sed. Sed facilisis quam eget
-neque viverra venenatis. Suspendisse ut lorem nec erat elementum
-bibendum. Curabitur lobortis purus in cursus blandit.</p>
-<p>Aliquam sed ex et lorem consequat feugiat at porta leo. Fusce id
-hendrerit tellus. Maecenas dictum felis neque, quis dictum metus
-tristique eu. Vivamus sed blandit nisl. Integer ut urna dolor. Cras in
-egestas eros, in aliquam nisi. Duis vitae elementum quam. Vivamus vel
-turpis commodo, porttitor urna vitae, viverra sem. Nam nec dignissim
-erat, id viverra libero. Integer vel lectus pellentesque tortor
-fringilla posuere. Vivamus quis magna accumsan, porta tortor at, aliquam
-urna. Aliquam vestibulum ante massa, ut gravida lectus sagittis
-vitae.</p>
-<p>Sed eget ipsum auctor, gravida magna sit amet, tincidunt mi. Nulla
-erat ante, volutpat nec sem eget, luctus posuere est. Praesent convallis
-nunc ac turpis bibendum, in maximus magna convallis. Vestibulum ante
-ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae;
-Sed sit amet nulla ante. Sed elit sem, lobortis nec nisi a, rhoncus
-ornare nunc. Curabitur ultrices neque feugiat, facilisis magna eu,
-consectetur magna. Mauris id eleifend ex.</p>
-<p>Morbi tincidunt mollis odio sit amet feugiat. Ut vel risus eu ante
-dictum consequat. Integer et luctus mauris. Donec nec faucibus urna, sed
-commodo risus. Nam elementum pulvinar erat, eget convallis est blandit
-vel. Etiam gravida sapien eu massa hendrerit maximus. Proin dolor quam,
-porta vitae libero non, venenatis porta tellus. Vivamus et elit a est
-aliquet consequat. Proin tempus, purus quis suscipit placerat, dui nunc
-euismod dui, sit amet luctus leo lectus in risus. Phasellus consectetur
-eleifend arcu. Nullam venenatis blandit nulla ut ullamcorper. Vestibulum
-eu arcu quis massa scelerisque sodales in ac augue. Quisque dapibus
-fringilla turpis, ut cursus tortor cursus sed. Sed facilisis quam eget
-neque viverra venenatis. Suspendisse ut lorem nec erat elementum
-bibendum. Curabitur lobortis purus in cursus blandit.</p>
+<div id="what-time-of-day-do-numbat-sightings-occur"
+class="section level2">
+<h2>What time of day do numbat sightings occur?</h2>
+<blockquote>
+<p>A density plot of the “hour” variable should tell us!</p>
+</blockquote>
+<pre class="r"><code>numbats %&gt;%
+  ggplot(aes(x = hour)) +
+  geom_density(fill = &quot;orange&quot;)</code></pre>
+<pre><code>## Warning: Removed 253 rows containing non-finite values (`stat_density()`).</code></pre>
+<p><img src="p10_files/figure-html/hour-1.png" width="672" /></p>
+<pre class="r"><code>numbats %&gt;%
+  drop_na(hour)%&gt;%
+  summarize(mean(hour))</code></pre>
+<pre><code>## # A tibble: 1 × 1
+##   `mean(hour)`
+##          &lt;dbl&gt;
+## 1         12.4</code></pre>
+<blockquote>
+<p>Looks like they come out just after noon!</p>
+</blockquote>
+</div>
+<div id="are-numbat-sightings-more-frequent-in-the-summer-or-winter"
+class="section level2">
+<h2>Are numbat sightings more frequent in the summer or winter?</h2>
+<blockquote>
+<p>In Australia, summer covers the months of December, January, and
+February, while winter ranges from June to August. Lets use that
+knowledge to slice and dice this dataset the way we want:</p>
+</blockquote>
+<pre class="r"><code>#Processing
+numbats_szns &lt;- numbats %&gt;%
+  filter(month == c(&quot;Dec&quot;,&quot;Jan&quot;, &quot;Feb&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;)) %&gt;%
+  mutate(season = case_when(month == &quot;Dec&quot; ~ &quot;summer&quot;,
+                            month == &quot;Jan&quot; ~ &quot;summer&quot;,
+                            month == &quot;Feb&quot; ~ &quot;summer&quot;,
+                            month == &quot;Jun&quot; ~ &quot;winter&quot;,
+                            month == &quot;Jul&quot; ~ &quot;winter&quot;,
+                            month == &quot;Aug&quot; ~ &quot;winter&quot;,))</code></pre>
+<pre><code>## Warning: There was 1 warning in `filter()`.
+## ℹ In argument: `month == c(&quot;Dec&quot;, &quot;Jan&quot;, &quot;Feb&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;)`.
+## Caused by warning in `month == c(&quot;Dec&quot;, &quot;Jan&quot;, &quot;Feb&quot;, &quot;Jun&quot;, &quot;Jul&quot;, &quot;Aug&quot;)`:
+## ! longer object length is not a multiple of shorter object length</code></pre>
+<pre class="r"><code>numbat_szns_counts &lt;- numbats_szns %&gt;%
+  group_by(season) %&gt;%
+  summarize(&quot;count&quot; = n())
+
+# Visualization
+numbats_szns %&gt;%
+  ggplot(aes(x = season, fill = season)) + 
+  geom_histogram(stat = &quot;count&quot;, alpha = 0.7)</code></pre>
+<pre><code>## Warning in geom_histogram(stat = &quot;count&quot;, alpha = 0.7): Ignoring unknown
+## parameters: `binwidth`, `bins`, and `pad`</code></pre>
+<p><img src="p10_files/figure-html/numbat-seasons-1.png" width="672" /></p>
+<blockquote>
+<p>Looks like numbat sightings are pretty substantially more common in
+the summer!</p>
+</blockquote>
+</div>
+<div id="do-sightings-happen-more-on-week-days-than-weekends"
+class="section level2">
+<h2>Do sightings happen more on week days than weekends?</h2>
+<blockquote>
+<p>This should also be pretty straightforward as well:</p>
+</blockquote>
+<pre class="r"><code>numbats %&gt;%
+  drop_na(wday) %&gt;%
+  ggplot(aes(x = factor(wday, level = c(&quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;)), fill = wday)) + 
+  geom_histogram(stat = &quot;count&quot;, alpha = 0.7)</code></pre>
+<pre><code>## Warning in geom_histogram(stat = &quot;count&quot;, alpha = 0.7): Ignoring unknown
+## parameters: `binwidth`, `bins`, and `pad`</code></pre>
+<p><img src="p10_files/figure-html/week-1.png" width="672" /></p>
+<blockquote>
+<p>Seems like they like weekdays, and particularly Mondays!</p>
+</blockquote>
 </div>
 
 
