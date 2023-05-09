@@ -137,10 +137,12 @@ group_means <- avg_kcal_long %>%
 colnames(group_means)[2] <- "kcals"
 
 group_means %>%
-  ggplot(aes(x = group, y = kcals, fill = as.factor(group))) +
+  ggplot(aes(x = as.factor(group), y = kcals, fill = as.factor(group))) +
   geom_bar(stat = "identity", alpha = 0.5) +
   geom_point(data = filter(avg_kcal_long, diet == "total"), stat = "identity") +
-  scale_fill_manual(values = c("blue",  "red"))
+  scale_fill_manual(values = c("blue",  "red")) + 
+  labs(x = "Group",
+       fill = "Group")
 ```
 
 > So just based on the visual, it looks like we do have a descriptive difference between the groups, with the rats in group two eating more than those in group 1. Let's test this difference for significance:
@@ -227,7 +229,9 @@ tidy(m_calorie_water)
 all_days_kcal_post %>%
   ggplot(aes(x = water, y = total)) +
   geom_jitter() +
-  geom_smooth(method = "lm") 
+  geom_smooth(method = "lm") +
+  labs(x = "Water Intake (g)",
+       y = "Total Food Consumption (Kcals)")
 ```
 
 > This gives us pretty convincing evidence that water and calorie intake aren't meaningfully related. The correlation between the two is fairly low, and when we use water intake to predict calorie intake the slope is non-significant.

@@ -443,10 +443,12 @@ group_means &lt;- avg_kcal_long %&gt;%
 colnames(group_means)[2] &lt;- &quot;kcals&quot;
 
 group_means %&gt;%
-  ggplot(aes(x = group, y = kcals, fill = as.factor(group))) +
+  ggplot(aes(x = as.factor(group), y = kcals, fill = as.factor(group))) +
   geom_bar(stat = &quot;identity&quot;, alpha = 0.5) +
   geom_point(data = filter(avg_kcal_long, diet == &quot;total&quot;), stat = &quot;identity&quot;) +
-  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;))</code></pre>
+  scale_fill_manual(values = c(&quot;blue&quot;,  &quot;red&quot;)) + 
+  labs(x = &quot;Group&quot;,
+       fill = &quot;Group&quot;)</code></pre>
 <p><img src="p08_files/figure-html/group-viz-1.png" width="672" /></p>
 <blockquote>
 <p>So just based on the visual, it looks like we do have a descriptive
@@ -557,7 +559,9 @@ tidy(m_calorie_water)</code></pre>
 <pre class="r"><code>all_days_kcal_post %&gt;%
   ggplot(aes(x = water, y = total)) +
   geom_jitter() +
-  geom_smooth(method = &quot;lm&quot;) </code></pre>
+  geom_smooth(method = &quot;lm&quot;) +
+  labs(x = &quot;Water Intake (g)&quot;,
+       y = &quot;Total Food Consumption (Kcals)&quot;)</code></pre>
 <pre><code>## `geom_smooth()` using formula = &#39;y ~ x&#39;</code></pre>
 <pre><code>## Warning: Removed 1 rows containing non-finite values (`stat_smooth()`).</code></pre>
 <pre><code>## Warning: Removed 1 rows containing missing values (`geom_point()`).</code></pre>
