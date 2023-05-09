@@ -42,7 +42,9 @@ Another question: how have age gaps in movies changed over time? I can imagine t
 movies %>%
   ggplot(aes(x = Release.Year, y = Age.Difference)) + 
   geom_jitter() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(x = "Release Year",
+       y = "Age Difference Between Leads")
 ```
 
 It looks like I was right! To follow down this road, let's put release year into a linear model that predicts age difference and see how it does:
@@ -71,10 +73,12 @@ glance(m_diff_year_gender)$adj.r.squared
 movies %>%
   ggplot(aes(x = Release.Year, y = Age.Difference, color = Actor.1.Gender)) + 
   geom_jitter() +
-  geom_smooth(method = "lm", fullrange = TRUE, se = FALSE)
+  geom_smooth(method = "lm", fullrange = TRUE, se = FALSE) +
+  labs(x = "Release Year",
+       y = "Age Difference Between Leads")
 ```
 
-Looks like I wasn't quite right. Descriptively, the older member of the pair being a woman does predict a smaller age gap, but neither this slope nor the interaction term are significant. Additionally, the adjusted R-squared basically doesn't increase at all, so we're clearly not explaining much more variance.
+Looks like I wasn't quite right. Descriptively, the older member of the pair being a woman does predict a smaller age gap, but neither this slope nor the interaction term are significant. Additionally, the adjusted R-squared basically doesn't increase at all, so we're clearly not explaining much more variance. This is probably because there just aren' that many movies where the woman is the older member of a pair of leads.
 
 Finally, let's replace the gender of the older member of the pair with the age of the older member of the pair. This model is bound to increase the amount of variance we can explain; large age gaps are only possible when one member of the pair is older:
 
