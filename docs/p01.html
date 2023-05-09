@@ -345,7 +345,7 @@ plot intake over time:</p>
                                   y = Intake,
                                   color = dosename)) + 
   geom_point() + 
-  geom_line()</code></pre>
+  geom_line() </code></pre>
 <p><img src="p01_files/figure-html/first-pass-1.png" width="672" /></p>
 <p>At this point I realized that the points in my original plot are
 group <em>means</em>, and the points in my current data frame are from
@@ -435,9 +435,13 @@ ggplot(mapping = aes(x = realtime,
                      color = dosename)) + 
   geom_point() + 
   geom_line() + 
-  geom_errorbar(aes(ymin = Average - (StDev/sqrt(7)), ymax = Average + StDev/sqrt(7)))</code></pre>
+  geom_errorbar(aes(ymin = Average - (StDev/sqrt(7)), ymax = Average + StDev/sqrt(7))) +
+#I realized the error bars actually were standard errors, so I divided StDev by sqrt(7) to convert
+  labs(title = &quot;Ad Libitum Food Intake Over Time&quot;,
+       x = &quot;Time (min)&quot;, 
+       y = &quot;Intake (Kilocalories)&quot;,
+       color = &quot;Dosage&quot;)</code></pre>
 <p><img src="p01_files/figure-html/graph-with-error-bars-1.png" width="672" /></p>
-<pre class="r"><code>#I realized the error bars actually were standard errors, so I divided StDev by sqrt(7) to convert</code></pre>
 <p>And here we have our finished plot!</p>
 <p>I want to point out that this plot is good, but it isn’t
 <em>great</em>. An alternative way to represent it that jumps out at me
@@ -448,7 +452,11 @@ ggplot(mapping = aes(x = realtime,
                      y = Intake,
                      color = dosename)) + 
   geom_point() + 
-  geom_smooth()</code></pre>
+  geom_smooth() +
+  labs(title = &quot;Ad Libitum Food Intake Over Time&quot;,
+       x = &quot;Time (min)&quot;, 
+       y = &quot;Intake (Kilocalories)&quot;,
+       color = &quot;Dosage&quot;)</code></pre>
 <pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula = &#39;y ~ x&#39;</code></pre>
 <p><img src="p01_files/figure-html/smooth-alternative-1.png" width="672" />
 A little messy, but there’s potential I think!</p>
