@@ -6,7 +6,7 @@ title: "Portfolio 9"
 
 > Let's get everything loaded and prepped:
 
-```{r setup}
+```{r setup,  message=FALSE}
 library(tidyverse)
 library(readxl)
 ```
@@ -33,8 +33,8 @@ day_six <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Port
 day_seven <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
                       sheet = 16,
                       col_names = TRUE)
-avg_kcal <- day_seven <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
-                      sheet = 9,
+avg_kcal <- read_excel("/Users/lawilson1999/Desktop/Data Science Spring 2023/Portfolio/p03/IC Diet Choice.xlsx",
+                      sheet = 17,
                       col_names = TRUE)
 
 columns <- c('rat', 'zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred', 'water')
@@ -101,5 +101,91 @@ all_days_kcal_long %>%
   filter(diet != "water") %>%
   ggplot(aes(x = day, y = kcals, color = diet)) +
   geom_line()
-    
 ```
+
+> So it looks like intake was fairly constant across days for all diets except for the 20% sugar diet, which seems to have increased across days on average.  I wonder if that pattern actually holds up for the individual rats if I look at their data separately:
+
+```{r change-over-time-for-individual}
+all_days_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = day, y = kcals, color = diet)) +
+  geom_line() +
+  facet_wrap(~rat)
+```
+
+> So it seems like there. were a few individuals whose consumption of the 20% diet spiked toward the end, but nothing too crazy. I still may double check my data entry though,  just to make sure there weren't any mistakes there.
+
+> Finally,  let's see if I like the look of `geom_smooth()` better than `geom_line()`:
+
+```{r geom-smooth, warning=FALSE}
+all_days_kcal_long %>%
+  filter(rat == "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = day, y = kcals, color = diet)) +
+  geom_smooth(se = FALSE)
+```
+
+> Purely aesthetically I like this better, but for the sake of accuracy I would probably include the line graph in my actual thesis or in a paper.
+
+## Favorite Diet
+
+> Next I want to try out ways to represent the preferred diet across animals, which was the main thing this part of the experiment was seeking to figure out. The most natural way to show this would probably be a bar graph:
+
+```{r favorite-diet-bar-graph}
+avg_kcal_long %>%
+  filter(rat == "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_bar(stat = "identity", alpha = 0.7)
+```
+
+> Generally I like this, but I wonder if there wouldn't be a more creative way of showing the same thing. A box plot, maybe?
+
+```{r favorite-diet-boxplot}
+avg_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_boxplot(alpha = 0.7)
+```
+
+> I don't like the way this looks, but it does show well that there was much more variability in some of the diets than others. Again, perhaps reason to double check my data entry.
+
+> A violin plot?
+
+```{r violin}
+avg_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_violin(alpha = 0.7)
+```
+> I like these a lot! Nice to look at while also actually converying information.  Maybe adding boxplots to these violin plots (or quartiles, or just the points themselves) would add something as well:
+
+```{r violin-plots-plus}
+# add boxplots to violins
+avg_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(alpha = 0.7, width = 0.1)
+
+# add quartiles
+avg_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_violin(alpha = 0.7, draw_quantiles = c(0.25, 0.5, 0.75))
+
+# add points
+avg_kcal_long %>%
+  filter(rat != "Avg") %>%
+  filter(diet != "water") %>%
+  ggplot(aes(x = factor(diet, level=c('zero', 'twenty', 'forty', 'sixty', 'eighty', 'hundred')), y = kcals, fill = diet)) +
+  geom_violin(alpha = 0.7) +
+  geom_point()
+```
+
+> I don't like the box plots, but the quartiles and points both have promise!
