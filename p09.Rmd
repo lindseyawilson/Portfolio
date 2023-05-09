@@ -100,7 +100,9 @@ all_days_kcal_long %>%
   filter(rat == "Avg") %>%
   filter(diet != "water") %>%
   ggplot(aes(x = day, y = kcals, color = diet)) +
-  geom_line()
+  geom_line() +
+  labs(x = "Day",
+       fill = "Diet")
 ```
 
 > So it looks like intake was fairly constant across days for all diets except for the 20% sugar diet, which seems to have increased across days on average.  I wonder if that pattern actually holds up for the individual rats if I look at their data separately:

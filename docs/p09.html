@@ -393,7 +393,9 @@ all_days_kcal_long %&gt;%
   filter(rat == &quot;Avg&quot;) %&gt;%
   filter(diet != &quot;water&quot;) %&gt;%
   ggplot(aes(x = day, y = kcals, color = diet)) +
-  geom_line()</code></pre>
+  geom_line() +
+  labs(x = &quot;Day&quot;,
+       fill = &quot;Diet&quot;)</code></pre>
 <p><img src="p09_files/figure-html/change-over-time-1.png" width="672" /></p>
 <blockquote>
 <p>So it looks like intake was fairly constant across days for all diets
