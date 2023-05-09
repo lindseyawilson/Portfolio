@@ -308,6 +308,7 @@ href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-
 class="uri">https://github.com/rfordatascience/tidytuesday/blob/master/data/2023/2023-03-07/readme.md</a></p>
 </blockquote>
 <pre class="r"><code>library(tidyverse)
+library(maps)
 
 tuesdata &lt;- tidytuesdayR::tt_load(2023, week = 10)</code></pre>
 <pre><code>## 
@@ -330,9 +331,22 @@ Australia:</p>
 <pre><code>## Warning: Removed 83 rows containing missing values (`geom_point()`).</code></pre>
 <p><img src="p10_files/figure-html/location-1.png" width="672" /></p>
 <blockquote>
-<p>This by itself isn’t incredibly intuitive, but I can’t seem to get
-the points to cleanly superimpose over a map of Australia. I’ve checked
-though, and the sightings do span the entirety of the country.</p>
+<p>This by itself isn’t incredibly intuitive. Let’s try to superimpose
+them over a map of Australia</p>
+</blockquote>
+<pre class="r"><code>oz &lt;- world.cities[world.cities$country.etc == &quot;Australia&quot;,]
+
+numbats %&gt;%
+  ggplot(aes(x = decimalLongitude, y = decimalLatitude)) +
+  geom_point(color = &quot;orange&quot;) +
+  geom_point(data = oz, aes(x = long, y = lat)) +
+  labs(x = &quot;Longitude&quot;,
+       y = &quot;Latutude&quot;)</code></pre>
+<pre><code>## Warning: Removed 83 rows containing missing values (`geom_point()`).</code></pre>
+<p><img src="p10_files/figure-html/oz-1.png" width="672" /></p>
+<blockquote>
+<p>Generally sightings seem to appear mostly in the southwesternmost tip
+of the country.</p>
 </blockquote>
 </div>
 <div id="what-time-of-day-do-numbat-sightings-occur"
@@ -385,7 +399,10 @@ numbats_szns &lt;- numbats %&gt;%
 # Visualization
 numbats_szns %&gt;%
   ggplot(aes(x = season, fill = season)) + 
-  geom_histogram(stat = &quot;count&quot;, alpha = 0.7)</code></pre>
+  geom_histogram(stat = &quot;count&quot;, alpha = 0.7) +
+  labs(x = &quot;Season&quot;,
+       y = &quot;Number of Sightings&quot;,
+       fill = &quot;Season&quot;)</code></pre>
 <pre><code>## Warning in geom_histogram(stat = &quot;count&quot;, alpha = 0.7): Ignoring unknown
 ## parameters: `binwidth`, `bins`, and `pad`</code></pre>
 <p><img src="p10_files/figure-html/numbat-seasons-1.png" width="672" /></p>
@@ -403,7 +420,10 @@ class="section level2">
 <pre class="r"><code>numbats %&gt;%
   drop_na(wday) %&gt;%
   ggplot(aes(x = factor(wday, level = c(&quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;)), fill = wday)) + 
-  geom_histogram(stat = &quot;count&quot;, alpha = 0.7)</code></pre>
+  geom_histogram(stat = &quot;count&quot;, alpha = 0.7) + 
+  labs(x = &quot;Day of the Week&quot;,
+       y = &quot;Number of Sightings&quot;,
+       fill = &quot;Day&quot;)</code></pre>
 <pre><code>## Warning in geom_histogram(stat = &quot;count&quot;, alpha = 0.7): Ignoring unknown
 ## parameters: `binwidth`, `bins`, and `pad`</code></pre>
 <p><img src="p10_files/figure-html/week-1.png" width="672" /></p>

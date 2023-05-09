@@ -8,6 +8,7 @@ title: "Portfolio 10"
 
 ```{r setup, message=FALSE}
 library(tidyverse)
+library(maps)
 
 tuesdata <- tidytuesdayR::tt_load(2023, week = 10)
 numbats <- tuesdata$numbats
@@ -25,7 +26,20 @@ numbats %>%
   geom_point(color = "orange")
 ```
 
-> This by itself isn't incredibly intuitive, but I can't seem to get the points to cleanly superimpose over a map of Australia. I've checked though, and the sightings do span the entirety of the country.
+> This by itself isn't incredibly intuitive. Let's try to superimpose them over a map of Australia
+
+```{r oz}
+oz <- world.cities[world.cities$country.etc == "Australia",]
+
+numbats %>%
+  ggplot(aes(x = decimalLongitude, y = decimalLatitude)) +
+  geom_point(color = "orange") +
+  geom_point(data = oz, aes(x = long, y = lat)) +
+  labs(x = "Longitude",
+       y = "Latutude")
+```
+
+> Generally sightings seem to appear mostly in the southwesternmost tip of the country.
 
 ## What time of day do numbat sightings occur?
 
@@ -65,7 +79,10 @@ numbat_szns_counts <- numbats_szns %>%
 # Visualization
 numbats_szns %>%
   ggplot(aes(x = season, fill = season)) + 
-  geom_histogram(stat = "count", alpha = 0.7)
+  geom_histogram(stat = "count", alpha = 0.7) +
+  labs(x = "Season",
+       y = "Number of Sightings",
+       fill = "Season")
 ```
 
 > Looks like numbat sightings are pretty substantially more common in the summer!
@@ -78,7 +95,10 @@ numbats_szns %>%
 numbats %>%
   drop_na(wday) %>%
   ggplot(aes(x = factor(wday, level = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")), fill = wday)) + 
-  geom_histogram(stat = "count", alpha = 0.7)
+  geom_histogram(stat = "count", alpha = 0.7) + 
+  labs(x = "Day of the Week",
+       y = "Number of Sightings",
+       fill = "Day")
 ```
 
 > Seems like they like weekdays, and particularly Mondays!
